@@ -1,6 +1,8 @@
 Ruby MultiMarkdown 4
 ======================
 
+[![Build Status](https://travis-ci.org/tillsc/multi_markdown.png?branch=master)](https://travis-ci.org/tillsc/multi_markdown)
+
 An extension library around [Fletcher Penney's implementation][1]
 of MultiMarkdown in C.
 
