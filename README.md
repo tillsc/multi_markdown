@@ -35,7 +35,7 @@ systems should be fine.
 
 Install from GEM:
 
-    $ sudo gem install multi_markdown
+    $ sudo gem install multimarkdown
 
 Hacking:
 
