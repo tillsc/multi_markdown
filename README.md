@@ -23,7 +23,7 @@ Synopsis
     >> puts MultiMarkdown.new("Title: Some document\n\nSome text in the document").extract_metadata("title")
     # Some document
 
-    >> PEGMultiMarkdown.new('Hello! World!')
+    >> MultiMarkdown.new('Hello! World!')
 
 Installation / Hacking
 ----------------------
