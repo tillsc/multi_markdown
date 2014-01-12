@@ -1,8 +1,12 @@
 require 'rake/clean'
+require 'rdoc/task'
 require 'bundler'
+
 Bundler::GemHelper.install_tasks
 
 task :default => :test
+
+# ***** Build
 
 DLEXT = RbConfig::CONFIG['DLEXT']
 
@@ -47,6 +51,8 @@ CLEAN.include "lib/*.{so,bundle}"
 desc 'Build the multi_markdown extension'
 task :build => "lib/multi_markdown.#{DLEXT}"
 
+# ***** Test
+
 desc 'Run unit and conformance tests'
 task :test => [ 'test:unit', 'test:conformance' ]
 
@@ -69,4 +75,11 @@ namespace :test do
     end
   end
 
+end
+
+# ***** RDoc
+
+Rake::RDocTask.new do |rd|
+  rd.main = "README.md"
+  rd.rdoc_files.include("README.md", "ext/**/*.c", "lib/**/*.rb")
 end
