@@ -1,0 +1,12 @@
+ext/Makefile
+ext/*.o
+ext/*.bundle
+ext/*.so
+ext/*.dll
+lib/*.bundle
+lib/*.so
+lib/*.dll
+pkg
+.ftags
+mkmf.log
+nbproject

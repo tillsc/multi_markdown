@@ -1,0 +1,21 @@
+PATH
+  remote: .
+  specs:
+    multi_markdown (4.0.1)
+      bundler
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    json (1.8.1)
+    rake (10.1.1)
+    rdoc (4.1.1)
+      json (~> 1.4)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  multi_markdown!
+  rake
+  rdoc
