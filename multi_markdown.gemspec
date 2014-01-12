@@ -1,4 +1,4 @@
-#   Copyright 2011 innoQ Deutschland GmbH
+#   Copyright 2014 Till Schulte-Coerne
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -29,8 +29,9 @@ Gem::Specification.new do |s|
 
   s.add_dependency "bundler"
 
-  s.files = %w(LICENSE README.md Rakefile multi_markdown.gemspec) + Dir.glob("{bin,ext,lib,test}/**/*")
+  s.files = %w(LICENSE README.md Rakefile multi_markdown.gemspec) + Dir.glob("{bin,lib,test}/**/*") + Dir.glob("{ext,MultiMarkdown-4}/*.{c,h,rb}")
   s.test_files = Dir.glob("{test}/**/*")
   s.executables = "ruby_multi_markdown"
+  s.extensions = ['ext/extconf.rb']
   s.require_paths = ["lib"]
 end
