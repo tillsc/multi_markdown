@@ -17,7 +17,7 @@ $:.push File.expand_path("../lib", __FILE__)
 require "multi_markdown/version"
 
 Gem::Specification.new do |s|
-  s.name        = "multi_markdown"
+  s.name        = "multimarkdown"
   s.version     = MultiMarkdown::VERSION
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Till Schulte-Coerne"]
