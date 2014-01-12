@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    multi_markdown (4.0.1)
+    multi_markdown (4.5.1)
       bundler
 
 GEM
