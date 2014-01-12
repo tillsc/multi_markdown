@@ -28,13 +28,20 @@ class MultiMarkdownTest < Test::Unit::TestCase
     assert_equal "<p>Hello <span><em>World</em></span>!</p>", multimarkdown.to_html.strip
   end
 
+  def test_version_fits
+    assert MultiMarkdown::VERSION =~ /^#{MultiMarkdown::MMD_VERSION}/,
+        "Expected MultiMarkdown's version (#{MultiMarkdown::VERSION}) to start with the C library's version (#{MultiMarkdown::MMD_VERSION})"
+  end
+
   def test_meta_attributes
     multimarkdown = MultiMarkdown.new(<<-eof)
-Meta1: Foo
-Meta2: Bar
+meta1: Foo
+meta2: Bar
 
 Lorem Ipsum
     eof
+    assert_equal ["meta1", "meta2"], multimarkdown.metadata_keys()
+
     assert_equal "Foo", multimarkdown.extract_metadata("Meta1")
     assert_equal "Bar", multimarkdown.extract_metadata("Meta2")
   end

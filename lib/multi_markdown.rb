@@ -70,4 +70,6 @@ class MultiMarkdown
 
   alias to_s text
 
+  alias extract_metadata metadata
+
 end
