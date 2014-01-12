@@ -48,6 +48,9 @@ Changes
   * [Version 4.0.1](http://github.com/tillsc/multi_markdown/tree/v4.0.1): Initial port from
     [rpeg-markdown](https://github.com/rtomayko/rpeg-markdown/) and
     [rpeg-multimarkdown](https://github.com/djungelvral/rpeg-multimarkdown)
+  * [Version 4.0.5](http://github.com/tillsc/multi_markdown/tree/v4.0.5): Adopted
+    [MultiMarkdown-4`s](http://github.com/fletcher/MultiMarkdown-4/) version number for the
+    first two digits. Third digit is for the ruby wrapper.
 
 COPYING
 -------
