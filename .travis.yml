@@ -5,3 +5,5 @@ rvm:
 
 script: 'bundle exec rake test:unit'
 
+before_install:
+  - git submodule update --init --recursive

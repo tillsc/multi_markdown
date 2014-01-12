@@ -1,6 +1,3 @@
-[submodule "test/MultiMarkdownTest"]
-	path = test/MultiMarkdownTest
-	url = git://github.com/fletcher/MMD-Test-Suite.git
 [submodule "MultiMarkdown-4"]
 	path = MultiMarkdown-4
-	url = git@github.com:fletcher/MultiMarkdown-4.git
+	url = git://github.com/fletcher/MultiMarkdown-4.git
