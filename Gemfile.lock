@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    multi_markdown (4.5.1)
+    multimarkdown (4.5.2)
       bundler
 
 GEM
@@ -16,6 +16,6 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  multi_markdown!
+  multimarkdown!
   rake
   rdoc
