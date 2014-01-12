@@ -37,7 +37,7 @@ Install from GEM:
 
 Hacking:
 
-    $ git clone --recursve git://github.com/tillsc/multi_markdown.git
+    $ git clone --recursive git://github.com/tillsc/multi_markdown.git
     $ cd multi_markdown
     $ bundle install
     $ bundle exec rake test
