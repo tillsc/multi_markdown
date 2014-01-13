@@ -59,7 +59,7 @@ Hacking:
 Changes
 -------
 
-  * [Version 4.5.0.r1](http://github.com/tillsc/multi_markdown/tree/v4.5.0.r1):
+  * [Version 4.5.0.1](http://github.com/tillsc/multi_markdown/tree/v4.5.0.1):
     First Version based upon  [rpeg-markdown](https://github.com/rtomayko/rpeg-markdown/)
     and [rpeg-multimarkdown](https://github.com/djungelvral/rpeg-multimarkdown).
 
