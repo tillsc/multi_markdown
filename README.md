@@ -24,12 +24,12 @@ Synopsis
     >> MultiMarkdown.new('_Hello World!_').to_latex
     #=> "\emph{Hello World!}"
 
-	>> doc = MultiMarkdown.new("Title: Some document\n\nSome text in the document")
+	>> doc = MultiMarkdown.new("Title: Some document  \n\nSome text in the document")
 
-    >> doc.metadata_keys
-    #=> ["title"]
+    >> doc.metadata
+    #=> {"title" => "Some document"}
 
-    >> doc.metadata("title")
+    >> doc.metadata("Title")
     #=> "Some document"
 
 See [MultiMarkdown documentation](http://fletcher.github.io/MultiMarkdown-4/)
@@ -59,16 +59,9 @@ Hacking:
 Changes
 -------
 
-  * [Version 4.0.1](http://github.com/tillsc/multi_markdown/tree/v4.0.1):
-    Initial port from [rpeg-markdown](https://github.com/rtomayko/rpeg-markdown/)
-    and [rpeg-multimarkdown](https://github.com/djungelvral/rpeg-multimarkdown)
-  * [Version 4.5.1](http://github.com/tillsc/multi_markdown/tree/v4.5.1):
-    Adopted [MultiMarkdown-4`s](http://github.com/fletcher/MultiMarkdown-4/)
-    version number for the first two digits. Third digit is for the ruby wrapper.
-  * [Version 4.5.2](http://github.com/tillsc/multi_markdown/tree/v4.5.2):
-    Renamed the gem to 'multimarkdown'
-  * [Version 4.5.3](http://github.com/tillsc/multi_markdown/tree/v4.5.3):
-    Refactored the C code and added method `MultiMarkdown#metadata_keys`
+  * [Version 4.5.0.r1](http://github.com/tillsc/multi_markdown/tree/v4.5.0.r1):
+    First Version based upon  [rpeg-markdown](https://github.com/rtomayko/rpeg-markdown/)
+    and [rpeg-multimarkdown](https://github.com/djungelvral/rpeg-multimarkdown).
 
 COPYING
 -------
