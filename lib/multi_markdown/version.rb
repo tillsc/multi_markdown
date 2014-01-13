@@ -1,6 +1,6 @@
 class MultiMarkdown
 
   # The ruby 'multimarkdown' gem version
-  VERSION = "4.5.3"
+  VERSION = "4.5.0.r1"
 
 end
