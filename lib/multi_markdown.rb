@@ -13,9 +13,6 @@ require 'multi_markdown/version'
 #
 class MultiMarkdown
 
-  # Original MultiMarkdown formatted text.
-  attr_reader :text
-
   # Set `true` to have smarty-like quote translation performed.
   attr_accessor :smart
 
@@ -68,8 +65,24 @@ class MultiMarkdown
     end
   end
 
-  alias to_s text
+  alias extract_metadata extract_metadata_value
 
-  alias extract_metadata metadata
+  # Returns a Hash cointaining all Metadata
+  #
+  #
+  def metadata(key = nil)
+    if @cached_metadata.nil?
+      @cached_metadata = {}
+      extract_metadata_keys.each do |k|
+        @cached_metadata[k.downcase] = extract_metadata_value(k)
+      end
+    end
+
+    if key
+      @cached_metadata[key.to_s.downcase]
+    else
+      @cached_metadata.dup
+    end
+  end
 
 end

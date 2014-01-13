@@ -23,7 +23,7 @@ int get_exts(VALUE self) {
 
 char *get_text(VALUE self) {
   /* grab char pointer to multimarkdown input text */
-  VALUE text = rb_funcall(self, rb_intern("text"), 0);
+  VALUE text = rb_iv_get(self, "@text");
   Check_Type(text, T_STRING);
   return StringValuePtr(text);
 }
@@ -79,18 +79,18 @@ void Init_multi_markdown() {
    */
   rb_define_method(rb_cMultiMarkdown, "to_latex", rb_multimarkdown_to_latex, 0);
 
-  /* Document-method: MultiMarkdown#metadata_keys
+  /* Document-method: MultiMarkdown#extract_metadata_keys
    *
    * Return Array of metadata keys
    */
-  rb_define_method(rb_cMultiMarkdown, "metadata_keys", rb_multimarkdown_extract_metadata_keys, 0);
+  rb_define_method(rb_cMultiMarkdown, "extract_metadata_keys", rb_multimarkdown_extract_metadata_keys, 0);
 
-  /* Document-method: MultiMarkdown#metadata
-   * :call-seq: metadata(key)
+  /* Document-method: MultiMarkdown#extract_metadata_value
+   * :call-seq: extract_metadata_value(key)
    *
-   * Fetches metadata specified by +key+ from +text+
+   * Fetches metadata specified by +key+ from MultiMarkdown text
    */
-  rb_define_method(rb_cMultiMarkdown, "metadata", rb_multimarkdown_extract_metadata_value, 1);
+  rb_define_method(rb_cMultiMarkdown, "extract_metadata_value", rb_multimarkdown_extract_metadata_value, 1);
 
   rb_define_const(rb_cMultiMarkdown, "MMD_VERSION", rb_str_new2(MMD_VERSION));
   /* Document-const: MultiMarkdown::MMD_VERSION

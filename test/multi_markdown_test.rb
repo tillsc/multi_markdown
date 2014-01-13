@@ -40,10 +40,25 @@ meta2: Bar
 
 Lorem Ipsum
     eof
-    assert_equal ["meta1", "meta2"], multimarkdown.metadata_keys()
+    assert_equal ["meta1", "meta2"], multimarkdown.extract_metadata_keys()
 
-    assert_equal "Foo", multimarkdown.extract_metadata("Meta1")
-    assert_equal "Bar", multimarkdown.extract_metadata("Meta2")
+    assert_equal "Foo", multimarkdown.extract_metadata_value("Meta1")
+    assert_equal "Bar", multimarkdown.extract_metadata_value("Meta2")
   end
+
+  def test_cached_metadata
+      multimarkdown = MultiMarkdown.new(<<-eof)
+MetaTheMeta1: Foo
+MetaTheMeta2: Bar
+
+Lorem Ipsum
+    eof
+
+    assert_equal({"metathemeta1" => "Foo", "metathemeta2" => "Bar"}, multimarkdown.metadata)
+
+    assert_equal("Foo", multimarkdown.metadata("MetaTheMeta1"))
+    assert_equal(nil, multimarkdown.metadata["MetaTheMeta1"])
+  end
+
 
 end
