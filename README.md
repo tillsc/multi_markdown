@@ -59,6 +59,11 @@ Hacking:
 Changes
 -------
 
+**Beware**: The versioning scheme isn't based upon 
+[Semantic Versioning](http://semver.org)! The first three version numbers are
+inherited from the underlying C library. Only the last number is used to indicate
+changes in the Ruby wrapper itself.
+
   * [Version 4.5.0.1](http://github.com/tillsc/multi_markdown/tree/v4.5.0.1):
     First Version based upon  [rpeg-markdown](https://github.com/rtomayko/rpeg-markdown/)
     and [rpeg-multimarkdown](https://github.com/djungelvral/rpeg-multimarkdown).
