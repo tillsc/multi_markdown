@@ -84,7 +84,7 @@ end
 # Parse options
 options = Parser.new do |p|
   p.banner = "Ruby interface to MultiMarkdown"
-  p.version = "ruby_multi_markdown #{MultiMarkdown::VERSION}"
+  p.version = "rmultimarkdown #{MultiMarkdown::VERSION}"
   p.option :compatibility, "markdown compatibility mode", :default => false
   p.option :filter_html, "filter out raw HTML except styles", :default => false
   p.option :process_html, "process MultiMarkdown inside of raw HTML", :default => false

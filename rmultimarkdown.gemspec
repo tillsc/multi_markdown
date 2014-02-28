@@ -17,7 +17,7 @@ $:.push File.expand_path("../lib", __FILE__)
 require "multi_markdown/version"
 
 Gem::Specification.new do |s|
-  s.name        = "multimarkdown"
+  s.name        = "rmultimarkdown"
   s.version     = MultiMarkdown::VERSION
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Till Schulte-Coerne"]
@@ -29,9 +29,9 @@ Gem::Specification.new do |s|
 
   s.add_dependency "bundler"
 
-  s.files = %w(LICENSE README.md Rakefile multi_markdown.gemspec) + Dir.glob("{bin,lib,test}/**/*") + Dir.glob("{ext,MultiMarkdown-4}/*.{c,h,rb}")
+  s.files = %w(LICENSE README.md Rakefile rmultimarkdown.gemspec) + Dir.glob("{bin,lib,test}/**/*") + Dir.glob("{ext,MultiMarkdown-4}/*.{c,h,rb}")
   s.test_files = Dir.glob("{test}/**/*")
-  s.executables = "ruby_multi_markdown"
+  s.executables = "rmultimarkdown"
   s.extensions = ['ext/extconf.rb']
   s.require_paths = ["lib"]
 end

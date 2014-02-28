@@ -43,11 +43,11 @@ systems should be fine.
 
 Install from [Rubygems](http://rubygems.org/gems/multimarkdown):
 
-    $ [sudo] gem install multimarkdown
+    $ [sudo] gem install rmultimarkdown
 
 Bundle via [Bundler](http://bundler.io):
 
-    gem 'multimarkdown'
+    gem 'rmultimarkdown'
 
 Hacking:
 

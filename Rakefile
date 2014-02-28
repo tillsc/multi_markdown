@@ -65,7 +65,7 @@ namespace :test do
 
   desc "Run conformance tests"
   task :conformance => :build do |t|
-    script = "#{pwd}/bin/ruby_multi_markdown"
+    script = "#{pwd}/bin/rmultimarkdown"
     chdir("MultiMarkdown-4/MarkdownTest") do
       sh "./MarkdownTest.pl --script='#{script}' --flags='-c' --tidy"
       sh "./MarkdownTest.pl --script='#{script}' --testdir='MultiMarkdownTests'"
