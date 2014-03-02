@@ -34,4 +34,11 @@ Gem::Specification.new do |s|
   s.executables = "ruby_multi_markdown"
   s.extensions = ['ext/extconf.rb']
   s.require_paths = ["lib"]
+
+  s.post_install_message = <<-MESSAGE
+!    The 'multimarkdown' gem has been deprecated and has been replaced by 'rmultimarkdown'.
+!    See: https://rubygems.org/gems/rmultimarkdown
+!    And: https://github.com/tillsc/multi_markdown
+MESSAGE
+
 end
