@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 $: << File.join(File.dirname(__FILE__), "../lib")
 
 require 'test/unit'
@@ -60,5 +62,16 @@ Lorem Ipsum
     assert_equal(nil, multimarkdown.metadata["MetaTheMeta1"])
   end
 
+  def test_encoding
+      multimarkdown = MultiMarkdown.new(<<-eof)
+umlauts: M€tädätä
+
+ÄÖÜßäöüµ√
+=========
+
+eof
+      assert_match(/<h1[^>]*>ÄÖÜßäöüµ√<\/h1>/, multimarkdown.to_html.strip)
+      assert_equal("M€tädätä", multimarkdown.metadata('umlauts'))
+  end
 
 end

@@ -1,9 +1,23 @@
 #include "ruby.h"
+#include <ruby/encoding.h>
+
 #include "../MultiMarkdown-4/parser.h"
+
+// Tries to convert a C string into an encoded ruby String
+static VALUE encoded_str_new2(char *str, char *encoding) {
+  VALUE result = rb_str_new2(str);
+
+  int enc = rb_enc_find_index(encoding);
+  if (enc > 0) {
+    rb_enc_associate_index(result, enc);
+  }
+
+  return result;
+}
 
 static VALUE rb_cMultiMarkdown;
 
-int get_exts(VALUE self) {
+static int get_exts(VALUE self) {
   int extensions = 0;
   if (rb_funcall(self, rb_intern("smart"), 0) == Qtrue)
     extensions = extensions | EXT_SMART;
@@ -30,7 +44,7 @@ char *get_text(VALUE self) {
 
 static VALUE rb_multimarkdown_to_html(VALUE self) {
   char *html = markdown_to_string(get_text(self), get_exts(self), HTML_FORMAT);
-  VALUE result = rb_str_new2(html);
+  VALUE result = encoded_str_new2(html, "UTF-8");
   free(html);
 
   return result;
@@ -38,7 +52,7 @@ static VALUE rb_multimarkdown_to_html(VALUE self) {
 
 static VALUE rb_multimarkdown_to_latex(VALUE self) {
   char *latex = markdown_to_string(get_text(self), get_exts(self), LATEX_FORMAT);
-  VALUE result = rb_str_new2(latex);
+  VALUE result = encoded_str_new2(latex, "UTF-8");
   free(latex);
 
   return result;
@@ -46,7 +60,7 @@ static VALUE rb_multimarkdown_to_latex(VALUE self) {
 
 static VALUE rb_multimarkdown_extract_metadata_keys(VALUE self) {
   char *metadata_keys = extract_metadata_keys(get_text(self), get_exts(self));
-  VALUE str = rb_str_new2(metadata_keys);
+  VALUE str = encoded_str_new2(metadata_keys, "UTF-8");
   free(metadata_keys);
 
   return rb_funcall(str, rb_intern("split"), 1, rb_str_new2("\n"));
@@ -57,7 +71,7 @@ static VALUE rb_multimarkdown_extract_metadata_value(VALUE self, VALUE key) {
   char *pkey = StringValuePtr(key);
 
   char *metadata = extract_metadata_value(get_text(self), get_exts(self), pkey);
-  VALUE result = rb_str_new2(metadata);
+  VALUE result = encoded_str_new2(metadata, "UTF-8");
   free(metadata);
 
   return result;
