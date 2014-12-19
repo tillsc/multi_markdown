@@ -21,6 +21,8 @@ static int get_exts(VALUE self) {
   int extensions = 0;
   if (rb_funcall(self, rb_intern("smart"), 0) == Qtrue)
     extensions = extensions | EXT_SMART;
+  if (rb_funcall(self, rb_intern("snippet"), 0) == Qtrue)
+    extensions = extensions | EXT_SNIPPET;
   if (rb_funcall(self, rb_intern("notes"), 0) == Qtrue)
     extensions = extensions | EXT_NOTES;
   if (rb_funcall(self, rb_intern("filter_html"), 0) == Qtrue)

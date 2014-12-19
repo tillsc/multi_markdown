@@ -90,6 +90,7 @@ options = Parser.new do |p|
   p.option :process_html, "process MultiMarkdown inside of raw HTML", :default => false
   p.option :filter_styles, "filter out HTML styles", :default => false
   p.option :smart, "use smart typography extension", :default => true
+  p.option :snippet, "only emit a partial HTML document, not a full one", :default => false
   p.option :notes, "use notes extension", :default => true
   p.option :output, "send output to FILE (default is stdout)", :name => "FILE", :default => "", :nodefault => true
   p.option :to, "convert to FORMAT", :name => "FORMAT", :default => "html", :value_in_set => ["html","latex","memoir","beamer","odf","opml"]
@@ -102,6 +103,7 @@ mmopts << :filter_html   if options[:filter_html]
 mmopts << :filter_styles if options[:filter_styles]
 mmopts << :process_html  if options[:process_html]
 mmopts << :smart         if options[:smart]
+mmopts << :snippet       if options[:snippet]
 mmopts << :notes         if options[:notes]
 mmopts << :compatibility if options[:compatibility]
 
