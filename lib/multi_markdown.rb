@@ -16,6 +16,9 @@ class MultiMarkdown
   # Set `true` to have smarty-like quote translation performed.
   attr_accessor :smart
 
+  # Set `true` to only emit a partial document and not a full one.
+  attr_accessor :snippet
+
   # Set `true` to have footnotes processed.
   attr_accessor :notes
 
@@ -39,6 +42,7 @@ class MultiMarkdown
   # set various processing options:
   #
   # * `:smart` - Enable SmartyPants processing.
+  # * `:snippet` - Only generate a partial document.
   # * `:notes` - Enable footnotes.
   # * `:filter_styles` - Do not output `<style>` tags included in the
   #   source text.
@@ -52,6 +56,7 @@ class MultiMarkdown
   def initialize(text, *extensions)
     @text = text
     @smart = true
+    @snippet = false
     @notes = true
     @filter_styles = false
     @filter_html = false
