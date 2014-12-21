@@ -30,6 +30,7 @@ class Parser
       next if @used_short.include?(c) || c == "_"
       return c # returns from short_from method
     end
+    nil
   end
 
   def validate(options) # remove this method if you want fewer lines of code and don't need validations
@@ -52,14 +53,14 @@ class Parser
     @result = (@default_values || {}).clone # reset or new
     @optionparser ||= OptionParser.new do |p| # prepare only once
       @options.each do |o|
-        @used_short << short = o[2][:short] || short_from(o[0])
+        @used_short << short = o[2][:short] == false ? nil : o[2][:short] || short_from(o[0])
         @result[o[0]] = o[2][:default] || false # set default
         klass = o[2][:default].class == Fixnum ? Integer : o[2][:default].class
         desk = o[1] + (o[2][:nodefault] ? "" : " (default is #{@result[o[0]]})")
         if [TrueClass, FalseClass, NilClass].include?(klass) # boolean switch
-          p.on("-" << short, "--[no-]" << o[0].to_s.gsub("_", "-"), desk) {|x| @result[o[0]] = x}
+          p.on(short && "-" << short, "--" << o[0].to_s.gsub("_", "-"), desk) {|x| @result[o[0]] = x}
         else # argument with parameter
-          p.on("-" << short, "--" << o[0].to_s.gsub("_", "-") << " " << (o[2][:name] ? "[#{o[2][:name].to_s}]" : ""), klass, desk) {|x| @result[o[0]] = x}
+          p.on(short && "-" << short, "--" << o[0].to_s.gsub("_", "-") << " " << (o[2][:name] ? "[#{o[2][:name].to_s}]" : ""), klass, desk) {|x| @result[o[0]] = x}
         end
       end
 
@@ -85,27 +86,19 @@ end
 options = Parser.new do |p|
   p.banner = "Ruby interface to MultiMarkdown"
   p.version = "rmultimarkdown #{MultiMarkdown::VERSION}"
-  p.option :compatibility, "markdown compatibility mode", :default => false
-  p.option :filter_html, "filter out raw HTML except styles", :default => false
-  p.option :process_html, "process MultiMarkdown inside of raw HTML", :default => false
-  p.option :filter_styles, "filter out HTML styles", :default => false
-  p.option :smart, "use smart typography extension", :default => true
-  p.option :snippet, "only emit a partial HTML document, not a full one", :default => false
-  p.option :notes, "use notes extension", :default => true
-  p.option :output, "send output to FILE (default is stdout)", :name => "FILE", :default => "", :nodefault => true
-  p.option :to, "convert to FORMAT", :name => "FORMAT", :default => "html", :value_in_set => ["html","latex","memoir","beamer","odf","opml"]
-  p.option :extract, "extract and display metadata specified by KEY", :name => "KEY", :default => "", :nodefault => true
+   p.option :output, "send output to FILE (default is stdout)", :name => "FILE", :default => "", :nodefault => true, :short => "o"
+   p.option :to, "convert to FORMAT", :name => "FORMAT", :default => "html", :value_in_set => ["html","latex"], :short => "t"
+   p.option :extract, "extract and display metadata specified by KEY", :name => "KEY", :default => "", :nodefault => true, :short => "e"
+  MultiMarkdown::EXTENSIONS.each do |ext, opts|
+    p.option ext.to_sym, opts[:desc], :default => false, :short => opts[:short] || false
+  end
 end.process!
 
 # Convert options to MultiMarkdown module's options
 mmopts = []
-mmopts << :filter_html   if options[:filter_html]
-mmopts << :filter_styles if options[:filter_styles]
-mmopts << :process_html  if options[:process_html]
-mmopts << :smart         if options[:smart]
-mmopts << :snippet       if options[:snippet]
-mmopts << :notes         if options[:notes]
-mmopts << :compatibility if options[:compatibility]
+MultiMarkdown::EXTENSIONS.each do |ext, description|
+  mmopts << ext.to_sym if options[ext.to_sym]
+end
 
 # ARGV will now only contain input filename, if it contains anything
 STDIN.reopen(ARGV[0], 'rb') if ARGV.any?

@@ -60,7 +60,9 @@ namespace :test do
 
   desc 'Run unit tests'
   task :unit => :build do |t|
-    ruby 'test/multi_markdown_test.rb'
+    FileList['test/*.rb'].each do |f|
+      ruby f
+    end
   end
 
   desc "Run conformance tests"

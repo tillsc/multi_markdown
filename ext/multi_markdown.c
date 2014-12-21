@@ -19,18 +19,35 @@ static VALUE rb_cMultiMarkdown;
 
 static int get_exts(VALUE self) {
   int extensions = 0;
-  if (rb_funcall(self, rb_intern("smart"), 0) == Qtrue)
-    extensions = extensions | EXT_SMART;
+  if (rb_funcall(self, rb_intern("complete"), 0) == Qtrue)
+    extensions = extensions | EXT_COMPLETE;
   if (rb_funcall(self, rb_intern("snippet"), 0) == Qtrue)
     extensions = extensions | EXT_SNIPPET;
-  if (rb_funcall(self, rb_intern("notes"), 0) == Qtrue)
+  if (rb_funcall(self, rb_intern("no_smart_quotes"), 0) != Qtrue)
+    extensions = extensions | EXT_SMART;
+  if (rb_funcall(self, rb_intern("no_footnotes"), 0) != Qtrue)
     extensions = extensions | EXT_NOTES;
-  if (rb_funcall(self, rb_intern("filter_html"), 0) == Qtrue)
-    extensions = extensions | EXT_FILTER_HTML;
+  if (rb_funcall(self, rb_intern("no_anchors"), 0) == Qtrue)
+    extensions = extensions | EXT_NO_LABELS;
   if (rb_funcall(self, rb_intern("filter_styles"), 0) == Qtrue)
     extensions = extensions | EXT_FILTER_STYLES;
+  if (rb_funcall(self, rb_intern("filter_html"), 0) == Qtrue)
+    extensions = extensions | EXT_FILTER_HTML;
   if (rb_funcall(self, rb_intern("process_html"), 0) == Qtrue)
     extensions = extensions | EXT_PROCESS_HTML;
+  if (rb_funcall(self, rb_intern("no_metadata"), 0) == Qtrue)
+    extensions = extensions | EXT_NO_METADATA;
+  if (rb_funcall(self, rb_intern("obfuscate_email_addresses"), 0) == Qtrue)
+    extensions = extensions | EXT_OBFUSCATE;
+  if (rb_funcall(self, rb_intern("critic_markup_accept_all"), 0) == Qtrue)
+    extensions = extensions | EXT_CRITIC | EXT_CRITIC_ACCEPT;
+  if (rb_funcall(self, rb_intern("critic_markup_reject_all"), 0) == Qtrue)
+    extensions = extensions | EXT_CRITIC | EXT_CRITIC_REJECT;
+  if (rb_funcall(self, rb_intern("random_footnote_anchor_numbers"), 0) == Qtrue)
+    extensions = extensions | EXT_RANDOM_FOOT;
+  if (rb_funcall(self, rb_intern("escaped_line_breaks"), 0) == Qtrue)
+    extensions = extensions | EXT_ESCAPED_LINE_BREAKS;
+
   /* Compatibility overwrites all other extensions */
   if (rb_funcall(self, rb_intern("compatibility"), 0) == Qtrue)
     extensions = EXT_COMPATIBILITY;

@@ -13,60 +13,36 @@ require 'multi_markdown/version'
 #
 class MultiMarkdown
 
-  # Set `true` to have smarty-like quote translation performed.
-  attr_accessor :smart
+  EXTENSIONS = {
+    "compatibility" => {:desc => "Markdown compatibility mode (disables all other options)", :short => "c"},
+    "complete" => {:desc => "Force complete document", :short => "f"},
+    "snippet" => {:desc => "Force snippet only", :short => "s"},
+    "no_smart_quotes" => {:desc => "Disable Smart quotes", :short => false},
+    "no_footnotes" => {:desc => "Disable Footnotes", :short => false},
+    "no_anchors" => {:desc => "Don't add anchors to headers, etc.", :short => false},
+    "filter_styles" => {:desc => "Filter out style blocks", :short => false},
+    "filter_html" => {:desc => "Filter out raw HTML", :short => false},
+    "process_html" => {:desc => "Process Markdown inside HTML", :short => false},
+    "no_metadata" => {:desc => "Don't parse Metadata", :short => false},
+    "obfuscate_email_addresses" => {:desc => "Mask email addresses", :short => false},
+    "critic_markup_accept_all" => {:desc => "CriticMarkup: Accept all proposed changes", :short => "a"},
+    "critic_markup_reject_all" => {:desc => "CriticMarkup: Reject all proposed changes", :short => "r"},
+    "random_footnote_anchor_numbers" => {:desc => "Use random numbers for footnote link anchors", :short => false},
+    "escaped_line_breaks" => {:desc => "Escaped line break", :short => false}
+  }
 
-  # Set `true` to only emit a partial document and not a full one.
-  attr_accessor :snippet
-
-  # Set `true` to have footnotes processed.
-  attr_accessor :notes
-
-  # Do not output `<style>` tags included in the source text.
-  attr_accessor :filter_styles
-
-  # Do not output any raw HTML included in the source text.
-  attr_accessor :filter_html
-
-  # Process MultiMarkdown inside of raw HTML
-  attr_accessor :process_html
-
-  # Markdown compatibility mode
-  attr_accessor :compatibility
-
-  # Included for compatibility with RedCloth's interface.
-  attr_accessor :fold_lines
+  EXTENSIONS.keys.each do |ext|
+    attr_accessor ext
+  end
 
   # Create a new MultiMarkdown processor. The `text` argument is a string
   # containing MultiMarkdown text. Variable other arguments may be supplied to
-  # set various processing options:
-  #
-  # * `:smart` - Enable SmartyPants processing.
-  # * `:snippet` - Only generate a partial document.
-  # * `:notes` - Enable footnotes.
-  # * `:filter_styles` - Do not output `<style>` tags included in the
-  #   source text.
-  # * `:filter_html` - Do not output raw HTML included in the
-  #   source text.
-  # * `:process_html` - Process MultiMarkdown code inside HTML tags.
-  # * `:compatibility` - Process MultiMarkdown code in Markdown
-  #   compatibility mode (disables all other extensions)
-  # * `:fold_lines` - RedCloth compatible line folding (not used).
-  #
+  # set various processing options. See MultiMarkdown::EXTENSIONS for more.
   def initialize(text, *extensions)
     @text = text
-    @smart = true
-    @snippet = false
-    @notes = true
-    @filter_styles = false
-    @filter_html = false
-    @process_html = false
-    @compatibility = false
-    extensions.each { |e| send("#{e}=", true) }
-    if @compatibility
-      @smart = false
-      @notes = false
-      @process_html = false
+    extensions.each do |ext|
+      raise "Unknown extension: #{ext.inspect}" unless EXTENSIONS.keys.include?(ext.to_s)
+      send("#{ext}=", true)
     end
   end
 
