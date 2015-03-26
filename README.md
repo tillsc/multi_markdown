@@ -13,7 +13,7 @@ library in C. It is based upon the ruby
 Synopsis
 --------
 
-    >> require 'multimarkdown'
+    >> require 'rmultimarkdown'
 
     >> MultiMarkdown.new('Hello, world.').to_html
     #=> "<p>Hello, world.</p>"
