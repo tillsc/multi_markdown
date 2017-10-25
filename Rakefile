@@ -13,35 +13,37 @@ DLEXT = RbConfig::CONFIG['DLEXT']
 # For Mac OS X -- prevents prevent additional ._* files being added to tarball
 ENV['COPYFILE_DISABLE'] = 'true'
 
-namespace "MultiMarkdown-4" do
+namespace "MultiMarkdown-6" do
 
   desc "Initialize the submodule"
   task "init" => "generate_parser"
 
   desc "Generate needed parser files"
   task "generate_parser" do
-    chdir('MultiMarkdown-4') do
-      sh 'make parser.c'
-    end
+    chdir('MultiMarkdown-6') do
+      sh 'make'
+        chdir('build') do
+          sh 'make'
+        end
+      end
   end
 
 end
 
-
-file 'ext/Makefile' => ["MultiMarkdown-4:init"] + FileList['ext/{extconf.rb,*.c,*.h,*.rb}', 'MultiMarkdown-4/*.{c,h}'] do
+file 'ext/Makefile' => ["MultiMarkdown-6:init"] + FileList['ext/{extconf.rb,*.c,*.h,*.rb}', 'MultiMarkdown-6/*.{c,h}'] do
   chdir('ext') do
     ruby 'extconf.rb'
   end
 end
 CLEAN.include 'ext/Makefile'
 
-file "ext/multi_markdown.#{DLEXT}" => FileList['ext/Makefile', 'ext/*.{c,h,rb}', 'MultiMarkdown-4/*.{c,h}'] do |f|
+file "ext/multi_markdown.#{DLEXT}" => FileList['ext/Makefile', 'ext/*.{c,h,rb}', 'MultiMarkdown-6/*.{c,h}'] do |f|
   chdir('ext') do
     sh 'make'
   end
 end
 CLEAN.include 'ext/*.{o,bundle,so}'
-CLEAN.include 'MultiMarkdown-4/*.o'
+CLEAN.include 'MultiMarkdown-6/*.o'
 
 file "lib/multi_markdown.#{DLEXT}" => "ext/multi_markdown.#{DLEXT}" do |f|
   cp f.prerequisites, "lib/", :preserve => true
@@ -68,7 +70,7 @@ namespace :test do
   desc "Run conformance tests"
   task :conformance => :build do |t|
     script = "#{pwd}/bin/rmultimarkdown"
-    chdir("MultiMarkdown-4/MarkdownTest") do
+    chdir("MultiMarkdown-6/MarkdownTest") do
       sh "./MarkdownTest.pl --script='#{script}' --flags='-c' --tidy"
       sh "./MarkdownTest.pl --script='#{script}' --testdir='MultiMarkdownTests'"
       sh "./MarkdownTest.pl --script='#{script}' --testdir='MultiMarkdownTests' --flags='-t latex' --ext='.tex'"

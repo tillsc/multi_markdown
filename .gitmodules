@@ -1,3 +1,6 @@
 [submodule "MultiMarkdown-4"]
 	path = MultiMarkdown-4
 	url = git://github.com/fletcher/MultiMarkdown-4.git
+[submodule "MultiMarkdown-6"]
+	path = MultiMarkdown-6
+	url = git@github.com:fletcher/MultiMarkdown-6.git

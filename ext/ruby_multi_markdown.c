@@ -1,7 +1,7 @@
 #include "ruby.h"
 #include <ruby/encoding.h>
 
-#include "../MultiMarkdown-4/parser.h"
+#include "../MultiMarkdown-6/Sources/libMultiMarkdown/include/libMultiMarkdown.h"
 
 // Tries to convert a C string into an encoded ruby String
 static VALUE encoded_str_new2(char *str, char *encoding) {
@@ -29,10 +29,10 @@ static int get_exts(VALUE self) {
     extensions = extensions | EXT_NOTES;
   if (rb_funcall(self, rb_intern("no_anchors"), 0) == Qtrue)
     extensions = extensions | EXT_NO_LABELS;
-  if (rb_funcall(self, rb_intern("filter_styles"), 0) == Qtrue)
-    extensions = extensions | EXT_FILTER_STYLES;
-  if (rb_funcall(self, rb_intern("filter_html"), 0) == Qtrue)
-    extensions = extensions | EXT_FILTER_HTML;
+  //if (rb_funcall(self, rb_intern("filter_styles"), 0) == Qtrue)
+  //  extensions = extensions | EXT_FILTER_STYLES;
+  //if (rb_funcall(self, rb_intern("filter_html"), 0) == Qtrue)
+  //  extensions = extensions | EXT_FILTER_HTML;
   if (rb_funcall(self, rb_intern("process_html"), 0) == Qtrue)
     extensions = extensions | EXT_PROCESS_HTML;
   if (rb_funcall(self, rb_intern("no_metadata"), 0) == Qtrue)
@@ -45,8 +45,8 @@ static int get_exts(VALUE self) {
     extensions = extensions | EXT_CRITIC | EXT_CRITIC_REJECT;
   if (rb_funcall(self, rb_intern("random_footnote_anchor_numbers"), 0) == Qtrue)
     extensions = extensions | EXT_RANDOM_FOOT;
-  if (rb_funcall(self, rb_intern("escaped_line_breaks"), 0) == Qtrue)
-    extensions = extensions | EXT_ESCAPED_LINE_BREAKS;
+  //if (rb_funcall(self, rb_intern("escaped_line_breaks"), 0) == Qtrue)
+  //  extensions = extensions | EXT_ESCAPED_LINE_BREAKS;
 
   /* Compatibility overwrites all other extensions */
   if (rb_funcall(self, rb_intern("compatibility"), 0) == Qtrue)
@@ -62,7 +62,9 @@ char *get_text(VALUE self) {
 }
 
 static VALUE rb_multimarkdown_to_html(VALUE self) {
-  char *html = markdown_to_string(get_text(self), get_exts(self), HTML_FORMAT);
+  printf("!!!TO HTML!!");
+  printf("-->%s<--", get_text(self));
+  char *html = mmd_string_convert(get_text(self), get_exts(self), FORMAT_HTML, ENGLISH);
   VALUE result = encoded_str_new2(html, "UTF-8");
   free(html);
 
@@ -70,7 +72,7 @@ static VALUE rb_multimarkdown_to_html(VALUE self) {
 }
 
 static VALUE rb_multimarkdown_to_latex(VALUE self) {
-  char *latex = markdown_to_string(get_text(self), get_exts(self), LATEX_FORMAT);
+  char *latex = mmd_string_convert(get_text(self), get_exts(self), FORMAT_LATEX, ENGLISH);
   VALUE result = encoded_str_new2(latex, "UTF-8");
   free(latex);
 
@@ -78,7 +80,7 @@ static VALUE rb_multimarkdown_to_latex(VALUE self) {
 }
 
 static VALUE rb_multimarkdown_extract_metadata_keys(VALUE self) {
-  char *metadata_keys = extract_metadata_keys(get_text(self), get_exts(self));
+  char *metadata_keys = mmd_string_metadata_keys(get_text(self));
   VALUE str = encoded_str_new2(metadata_keys, "UTF-8");
   free(metadata_keys);
 
@@ -89,7 +91,7 @@ static VALUE rb_multimarkdown_extract_metadata_value(VALUE self, VALUE key) {
   Check_Type(key, T_STRING);
   char *pkey = StringValuePtr(key);
 
-  char *metadata = extract_metadata_value(get_text(self), get_exts(self), pkey);
+  char *metadata = mmd_string_metavalue_for_key(get_text(self), pkey);
   VALUE result = encoded_str_new2(metadata, "UTF-8");
   free(metadata);
 
@@ -125,9 +127,12 @@ void Init_multi_markdown() {
    */
   rb_define_method(rb_cMultiMarkdown, "extract_metadata_value", rb_multimarkdown_extract_metadata_value, 1);
 
-  rb_define_const(rb_cMultiMarkdown, "MMD_VERSION", rb_str_new2(MMD_VERSION));
   /* Document-const: MultiMarkdown::MMD_VERSION
    *
-   * The version of the MultiMarkdown-4 library
+   * The version of the MultiMarkdown-6 library
    */
+  char *version = mmd_version();
+  rb_define_const(rb_cMultiMarkdown, "MMD_VERSION", rb_str_new2(version));
+  free(version);
+
 }
