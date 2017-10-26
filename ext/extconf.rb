@@ -3,8 +3,13 @@ require 'mkmf'
 LIBDIR      = RbConfig::CONFIG['libdir']
 INCLUDEDIR  = RbConfig::CONFIG['includedir']
 
-$CFLAGS="-fbracket-depth=512 -DNDEBUG=1"
-$CXXFLAGS="-fbracket-depth=512 -DNDEBUG=1"
+if RbConfig::CONFIG['CC'] == 'clang'
+  $CFLAGS="#{$CFLAGS} -fbracket-depth=512 -DNDEBUG=1"
+  $CXXFLAGS="#{$CXXFLAGS} -fbracket-depth=512 -DNDEBUG=1"
+else
+  $CFLAGS="#{$CFLAGS} -std=c99 -DNDEBUG=1"
+  $CXXFLAGS="#{$CXXFLAGS} -std=c99 -DNDEBUG=1"
+end
 
 HEADER_DIRS = [
   File.expand_path('../mmd', __FILE__),
