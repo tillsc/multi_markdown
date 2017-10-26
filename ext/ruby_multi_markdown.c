@@ -115,6 +115,8 @@ static VALUE rb_multimarkdown_set_language(VALUE self, VALUE language) {
   }
 
   mmd_engine_set_language(get_mmd_engine(self), lang);
+
+  return language;
 }
 
 static VALUE rb_multimarkdown_to_html(VALUE self) {
