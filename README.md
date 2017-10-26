@@ -1,10 +1,10 @@
-Ruby MultiMarkdown 4
+Ruby MultiMarkdown 6
 ====================
 
 [![Build Status](https://travis-ci.org/tillsc/multi_markdown.png?branch=master)](https://travis-ci.org/tillsc/multi_markdown)
 
 An extension library around
-[Fletcher Penney's MultiMarkdown](http://github.com/fletcher/MultiMarkdown-4/)
+[Fletcher Penney's MultiMarkdown](http://github.com/fletcher/MultiMarkdown-6/)
 library in C. It is based upon the ruby
 [rpeg-markdown](https://github.com/rtomayko/rpeg-markdown/) and
 [rpeg-multimarkdown](https://github.com/djungelvral/rpeg-multimarkdown) libraries by
@@ -32,7 +32,7 @@ Synopsis
     >> doc.metadata("Title")
     #=> "Some document"
 
-See [MultiMarkdown documentation](http://fletcher.github.io/MultiMarkdown-4/)
+See [MultiMarkdown documentation](http://fletcher.github.io/MultiMarkdown-6/)
 and `MultiMarkdown`'s [RDoc](http://rubydoc.info/gems/multimarkdown) for further Details.
 
 Installation / Hacking
@@ -54,22 +54,20 @@ Hacking:
     $ git clone --recursive git://github.com/tillsc/multi_markdown.git
     $ cd multi_markdown
     $ bundle install
+    $ bundle exec rake MultiMarkdown-6:init
     $ bundle exec rake test
 
-Changes
+Versioning
 -------
 
-**Beware**: The versioning scheme isn't based upon 
+**Beware**: The versioning scheme isn't based upon
 [Semantic Versioning](http://semver.org)! The first three version numbers are
 inherited from the underlying C library. Only the last number is used to indicate
 changes in the Ruby wrapper itself.
 
-  * [Version 4.5.0.1](http://github.com/tillsc/multi_markdown/tree/v4.5.0.1):
-    First Version based upon  [rpeg-markdown](https://github.com/rtomayko/rpeg-markdown/)
-    and [rpeg-multimarkdown](https://github.com/djungelvral/rpeg-multimarkdown).
 
 COPYING
 -------
 
-MultiMarkdown-4, multi_markdown are both licensed under the GPL and the MIT License.
+MultiMarkdown-6, multi_markdown are both licensed under the GPL and the MIT License.
 See [LICENSE](LICENCSE) for more information.

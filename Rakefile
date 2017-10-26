@@ -1,47 +1,66 @@
 require 'rake/clean'
 require 'rdoc/task'
 require 'bundler'
+require 'fileutils'
 
 Bundler::GemHelper.install_tasks
 
 task :default => "test:unit"
 
+task :release => ["MultiMarkdown-6:init", "test:unit"]
+
 # ***** Build
 
 DLEXT = RbConfig::CONFIG['DLEXT']
+MMD_DIR = File.expand_path("../ext/mmd", __FILE__)
 
 # For Mac OS X -- prevents prevent additional ._* files being added to tarball
 ENV['COPYFILE_DISABLE'] = 'true'
 
-namespace "MultiMarkdown-4" do
+namespace "MultiMarkdown-6" do
 
   desc "Initialize the submodule"
-  task "init" => "generate_parser"
+  task "init" do
+    FileUtils.rm_rf(MMD_DIR)
+    chdir('MultiMarkdown-6') do
+      sh 'make' # creates build/version.h
 
-  desc "Generate needed parser files"
-  task "generate_parser" do
-    chdir('MultiMarkdown-4') do
-      sh 'make parser.c'
+      # Copy all c and h files to MMD_DIR which will be released in the gem
+      ['Sources/libMultiMarkdown', 'build'].each do |dir|
+        chdir(dir) do
+          Dir.glob('{.,include}/*.{h,c}').each do |s|
+            next if s =~ /template/
+            dest = "#{MMD_DIR}/#{File.dirname(s)}"
+            FileUtils.mkdir_p(dest)
+            FileUtils.cp(s, dest)
+          end
+        end
+      end
+
+      # We have to disable the ObjectPool. see include/token.h
+      token_h_file = "#{MMD_DIR}/include/token.h"
+      IO.write(token_h_file, (File.open(token_h_file) { |f|
+        f.read.gsub(/#define kUseObjectPool/, "#define kUseObjectPoolDisabled")
+      }))
+
     end
   end
 
 end
 
-
-file 'ext/Makefile' => ["MultiMarkdown-4:init"] + FileList['ext/{extconf.rb,*.c,*.h,*.rb}', 'MultiMarkdown-4/*.{c,h}'] do
+file 'ext/Makefile' => FileList['ext/**/{extconf.rb,*.c,*.h,*.rb}'] do
   chdir('ext') do
     ruby 'extconf.rb'
   end
 end
 CLEAN.include 'ext/Makefile'
 
-file "ext/multi_markdown.#{DLEXT}" => FileList['ext/Makefile', 'ext/*.{c,h,rb}', 'MultiMarkdown-4/*.{c,h}'] do |f|
+file "ext/multi_markdown.#{DLEXT}" => FileList['ext/Makefile', 'ext/**/*.{c,h,rb}'] do |f|
   chdir('ext') do
     sh 'make'
   end
 end
-CLEAN.include 'ext/*.{o,bundle,so}'
-CLEAN.include 'MultiMarkdown-4/*.o'
+CLEAN.include 'ext/**/*.{o,bundle,so}'
 
 file "lib/multi_markdown.#{DLEXT}" => "ext/multi_markdown.#{DLEXT}" do |f|
   cp f.prerequisites, "lib/", :preserve => true
@@ -60,7 +79,7 @@ namespace :test do
 
   desc 'Run unit tests'
   task :unit => :build do |t|
-    FileList['test/*.rb'].each do |f|
+    FileList['test/*_test.rb'].each do |f|
       ruby f
     end
   end
@@ -68,12 +87,8 @@ namespace :test do
   desc "Run conformance tests"
   task :conformance => :build do |t|
     script = "#{pwd}/bin/rmultimarkdown"
-    chdir("MultiMarkdown-4/MarkdownTest") do
-      sh "./MarkdownTest.pl --script='#{script}' --flags='-c' --tidy"
-      sh "./MarkdownTest.pl --script='#{script}' --testdir='MultiMarkdownTests'"
-      sh "./MarkdownTest.pl --script='#{script}' --testdir='MultiMarkdownTests' --flags='-t latex' --ext='.tex'"
-      sh "./MarkdownTest.pl --script='#{script}' --testdir='BeamerTests' --flags='-t latex' --ext='.tex'"
-      sh "./MarkdownTest.pl --script='#{script}' --testdir='MemoirTests' --flags='-t latex' --ext='.tex'"
+    chdir("MultiMarkdown-6/tests") do
+      sh "./MarkdownTest.pl --script='#{script}' --testdir='MMD6Tests'"
     end
   end
 

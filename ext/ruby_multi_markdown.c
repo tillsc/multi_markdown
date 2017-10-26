@@ -1,7 +1,9 @@
 #include "ruby.h"
 #include <ruby/encoding.h>
 
-#include "../MultiMarkdown-4/parser.h"
+#include "libMultiMarkdown.h"
+#include "mmd.h"
+#include "d_string.h"
 
 // Tries to convert a C string into an encoded ruby String
 static VALUE encoded_str_new2(char *str, char *encoding) {
@@ -29,10 +31,6 @@ static int get_exts(VALUE self) {
     extensions = extensions | EXT_NOTES;
   if (rb_funcall(self, rb_intern("no_anchors"), 0) == Qtrue)
     extensions = extensions | EXT_NO_LABELS;
-  if (rb_funcall(self, rb_intern("filter_styles"), 0) == Qtrue)
-    extensions = extensions | EXT_FILTER_STYLES;
-  if (rb_funcall(self, rb_intern("filter_html"), 0) == Qtrue)
-    extensions = extensions | EXT_FILTER_HTML;
   if (rb_funcall(self, rb_intern("process_html"), 0) == Qtrue)
     extensions = extensions | EXT_PROCESS_HTML;
   if (rb_funcall(self, rb_intern("no_metadata"), 0) == Qtrue)
@@ -45,8 +43,6 @@ static int get_exts(VALUE self) {
     extensions = extensions | EXT_CRITIC | EXT_CRITIC_REJECT;
   if (rb_funcall(self, rb_intern("random_footnote_anchor_numbers"), 0) == Qtrue)
     extensions = extensions | EXT_RANDOM_FOOT;
-  if (rb_funcall(self, rb_intern("escaped_line_breaks"), 0) == Qtrue)
-    extensions = extensions | EXT_ESCAPED_LINE_BREAKS;
 
   /* Compatibility overwrites all other extensions */
   if (rb_funcall(self, rb_intern("compatibility"), 0) == Qtrue)
@@ -54,15 +50,77 @@ static int get_exts(VALUE self) {
   return extensions;
 }
 
-char *get_text(VALUE self) {
-  /* grab char pointer to multimarkdown input text */
-  VALUE text = rb_iv_get(self, "@text");
+// *** MMD Engine management
+
+typedef struct engine_manager {
+  mmd_engine *mmd_engine;
+} engine_manager;
+
+mmd_engine *get_mmd_engine(VALUE self) {
+  engine_manager *manager;
+  Data_Get_Struct(self, engine_manager, manager);
+
+  return manager->mmd_engine;
+}
+
+static void free_engine_manager(engine_manager* manager) {
+  if (manager->mmd_engine) {
+    mmd_engine_free(manager->mmd_engine, true);
+  }
+  free(manager);
+}
+
+static VALUE rb_multimarkdown_allocate(VALUE class) {
+  engine_manager *manager = malloc(sizeof(engine_manager));
+  manager->mmd_engine = NULL;
+
+  return Data_Wrap_Struct(class, NULL, free_engine_manager, manager);
+}
+
+static VALUE rb_multimarkdown_start_engine(VALUE self, VALUE text) {
   Check_Type(text, T_STRING);
-  return StringValuePtr(text);
+
+  engine_manager *manager;
+  Data_Get_Struct(self, engine_manager, manager);
+
+  if (manager->mmd_engine) {
+    mmd_engine_free(manager->mmd_engine, true);
+  }
+
+  manager->mmd_engine = mmd_engine_create_with_string(StringValuePtr(text), get_exts(self));
+
+  return self;
+}
+
+//*** Public Methods
+
+static VALUE rb_multimarkdown_set_language(VALUE self, VALUE language) {
+  short lang = ENGLISH;
+  VALUE language_s = rb_funcall(language, rb_intern("to_s"), 0);
+
+  if (rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("de")) == Qtrue || rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("german")) == Qtrue) {
+    lang = GERMANGUILL;
+  }
+  else if (rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("ch")) == Qtrue || rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("de-ch")) == Qtrue || rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("swiss")) == Qtrue) {
+    lang = GERMAN;
+  }
+  else if (rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("nl")) == Qtrue || rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("dutch")) == Qtrue) {
+    lang = DUTCH;
+  }
+  else if (rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("fr")) == Qtrue || rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("french")) == Qtrue) {
+    lang = FRENCH;
+  }
+  else if (rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("sv")) == Qtrue || rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("swedish")) == Qtrue) {
+    lang = SWEDISH;
+  }
+
+  mmd_engine_set_language(get_mmd_engine(self), lang);
+
+  return language;
 }
 
 static VALUE rb_multimarkdown_to_html(VALUE self) {
-  char *html = markdown_to_string(get_text(self), get_exts(self), HTML_FORMAT);
+  char *html = mmd_engine_convert(get_mmd_engine(self), FORMAT_HTML);
   VALUE result = encoded_str_new2(html, "UTF-8");
   free(html);
 
@@ -70,7 +128,7 @@ static VALUE rb_multimarkdown_to_html(VALUE self) {
 }
 
 static VALUE rb_multimarkdown_to_latex(VALUE self) {
-  char *latex = markdown_to_string(get_text(self), get_exts(self), LATEX_FORMAT);
+  char *latex = mmd_engine_convert(get_mmd_engine(self), FORMAT_LATEX);
   VALUE result = encoded_str_new2(latex, "UTF-8");
   free(latex);
 
@@ -78,7 +136,7 @@ static VALUE rb_multimarkdown_to_latex(VALUE self) {
 }
 
 static VALUE rb_multimarkdown_extract_metadata_keys(VALUE self) {
-  char *metadata_keys = extract_metadata_keys(get_text(self), get_exts(self));
+  char *metadata_keys = mmd_engine_metadata_keys(get_mmd_engine(self));
   VALUE str = encoded_str_new2(metadata_keys, "UTF-8");
   free(metadata_keys);
 
@@ -89,16 +147,24 @@ static VALUE rb_multimarkdown_extract_metadata_value(VALUE self, VALUE key) {
   Check_Type(key, T_STRING);
   char *pkey = StringValuePtr(key);
 
-  char *metadata = extract_metadata_value(get_text(self), get_exts(self), pkey);
+  char *metadata = mmd_engine_metavalue_for_key(get_mmd_engine(self), pkey);
   VALUE result = encoded_str_new2(metadata, "UTF-8");
-  free(metadata);
 
   return result;
 }
 
+//*** Define Class
+
 void Init_multi_markdown() {
 
   rb_cMultiMarkdown = rb_define_class("MultiMarkdown", rb_cObject);
+
+  rb_define_alloc_func(rb_cMultiMarkdown, rb_multimarkdown_allocate);
+  rb_define_protected_method(rb_cMultiMarkdown, "start_engine", rb_multimarkdown_start_engine, 1);
+
+
+  //
+  rb_define_method(rb_cMultiMarkdown, "language=", rb_multimarkdown_set_language, 1);
 
   /* Document-method: MultiMarkdown#to_html
    *
@@ -125,9 +191,12 @@ void Init_multi_markdown() {
    */
   rb_define_method(rb_cMultiMarkdown, "extract_metadata_value", rb_multimarkdown_extract_metadata_value, 1);
 
-  rb_define_const(rb_cMultiMarkdown, "MMD_VERSION", rb_str_new2(MMD_VERSION));
   /* Document-const: MultiMarkdown::MMD_VERSION
    *
-   * The version of the MultiMarkdown-4 library
+   * The version of the MultiMarkdown-6 library
    */
+  char *version = mmd_version();
+  rb_define_const(rb_cMultiMarkdown, "MMD_VERSION", rb_str_new2(version));
+  free(version);
+
 }
