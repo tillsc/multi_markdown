@@ -20,7 +20,9 @@ ENV['COPYFILE_DISABLE'] = 'true'
 namespace "MultiMarkdown-6" do
 
   desc "Initialize the submodule"
-  task "init" do
+  task :init => [:copy_files, 'ext/Makefile']
+
+  task :copy_files do
     FileUtils.rm_rf(MMD_DIR)
     chdir('MultiMarkdown-6') do
       sh 'make' # creates build/version.h
@@ -40,22 +42,21 @@ namespace "MultiMarkdown-6" do
       # We have to disable the ObjectPool. see include/token.h
       token_h_file = "#{MMD_DIR}/include/token.h"
       IO.write(token_h_file, (File.open(token_h_file) { |f|
-        f.read.gsub(/#define kUseObjectPool/, "#define kUseObjectPoolDisabled")
-      }))
+            f.read.gsub(/#define kUseObjectPool/, "#define kUseObjectPoolDisabled")
+          }))
 
+    end
+  end
+
+  file 'ext/Makefile' do
+    chdir('ext') do
+      ruby 'extconf.rb'
     end
   end
 
 end
 
-file 'ext/Makefile' => FileList['ext/**/{extconf.rb,*.c,*.h,*.rb}'] do
-  chdir('ext') do
-    ruby 'extconf.rb'
-  end
-end
-CLEAN.include 'ext/Makefile'
-
-file "ext/multi_markdown.#{DLEXT}" => FileList['ext/Makefile', 'ext/**/*.{c,h,rb}'] do |f|
+file "ext/multi_markdown.#{DLEXT}" => FileList['ext/**/*.{c,h,rb}'] do |f|
   chdir('ext') do
     sh 'make'
   end
