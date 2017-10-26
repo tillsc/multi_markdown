@@ -10,3 +10,5 @@ before_install:
   - gem update --system
   - gem --version
   - gem update bundler
+
+after_failure: "cat ext/mkmf.log"
