@@ -1,10 +1,10 @@
 language: ruby
 rvm:
-  - 1.9.3
-  - 2.0.0
   - 2.1.0
+  - 2.3.1
 
 script: 'bundle exec rake test:unit'
 
 before_install:
-  - git submodule update --init --recursive
+  - sudo apt-get -qq update
+  - gem update bundler
