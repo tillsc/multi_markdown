@@ -11,4 +11,4 @@ before_install:
   - gem --version
   - gem update bundler
 
-after_failure: "cat ext/mkmf.log"
+after_failure: "cat /home/travis/build/tillsc/multi_markdown/ext/mkmf.log"
