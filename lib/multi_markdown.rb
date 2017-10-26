@@ -4,12 +4,12 @@ require 'multi_markdown/version'
 # Front-end to fletcher penney's implementation of MultiMarkdown
 #
 # A simple processor:
-#     >> puts MultiMarkdown.new("Hello, World.").to_html
+#     >> puts MultiMarkdown.new('Hello, World.').to_html
 #     <p>Hello, World.</p>
 #
 # With other stuff:
-#     >> puts MultiMarkdown.new("_Hello World!_", :smart, :filter_html).to_html
-#     <p><em>Hello World!</em></p>
+#     >> puts MultiMarkdown.new('"Hello World!"', :no_smart_quotes).to_html
+#     <p>&quot;Hello World!&quot;</p>
 #
 class MultiMarkdown
 
@@ -20,15 +20,12 @@ class MultiMarkdown
     "no_smart_quotes" => {:desc => "Disable Smart quotes", :short => false},
     "no_footnotes" => {:desc => "Disable Footnotes", :short => false},
     "no_anchors" => {:desc => "Don't add anchors to headers, etc.", :short => false},
-    "filter_styles" => {:desc => "Filter out style blocks", :short => false},
-    "filter_html" => {:desc => "Filter out raw HTML", :short => false},
     "process_html" => {:desc => "Process Markdown inside HTML", :short => false},
     "no_metadata" => {:desc => "Don't parse Metadata", :short => false},
     "obfuscate_email_addresses" => {:desc => "Mask email addresses", :short => false},
     "critic_markup_accept_all" => {:desc => "CriticMarkup: Accept all proposed changes", :short => "a"},
     "critic_markup_reject_all" => {:desc => "CriticMarkup: Reject all proposed changes", :short => "r"},
-    "random_footnote_anchor_numbers" => {:desc => "Use random numbers for footnote link anchors", :short => false},
-    "escaped_line_breaks" => {:desc => "Escaped line break", :short => false}
+    "random_footnote_anchor_numbers" => {:desc => "Use random numbers for footnote link anchors", :short => false}
   }
 
   EXTENSIONS.keys.each do |ext|

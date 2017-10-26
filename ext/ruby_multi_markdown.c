@@ -31,30 +31,26 @@ static int get_exts(VALUE self) {
     extensions = extensions | EXT_NOTES;
   if (rb_funcall(self, rb_intern("no_anchors"), 0) == Qtrue)
     extensions = extensions | EXT_NO_LABELS;
-  //if (rb_funcall(self, rb_intern("filter_styles"), 0) == Qtrue)
-  //  extensions = extensions | EXT_FILTER_STYLES;
-  //if (rb_funcall(self, rb_intern("filter_html"), 0) == Qtrue)
-  //  extensions = extensions | EXT_FILTER_HTML;
   if (rb_funcall(self, rb_intern("process_html"), 0) == Qtrue)
     extensions = extensions | EXT_PROCESS_HTML;
   if (rb_funcall(self, rb_intern("no_metadata"), 0) == Qtrue)
     extensions = extensions | EXT_NO_METADATA;
-  //if (rb_funcall(self, rb_intern("obfuscate_email_addresses"), 0) == Qtrue)
-  //  extensions = extensions | EXT_OBFUSCATE;
+  if (rb_funcall(self, rb_intern("obfuscate_email_addresses"), 0) == Qtrue)
+    extensions = extensions | EXT_OBFUSCATE;
   if (rb_funcall(self, rb_intern("critic_markup_accept_all"), 0) == Qtrue)
     extensions = extensions | EXT_CRITIC | EXT_CRITIC_ACCEPT;
   if (rb_funcall(self, rb_intern("critic_markup_reject_all"), 0) == Qtrue)
     extensions = extensions | EXT_CRITIC | EXT_CRITIC_REJECT;
   if (rb_funcall(self, rb_intern("random_footnote_anchor_numbers"), 0) == Qtrue)
     extensions = extensions | EXT_RANDOM_FOOT;
-  //if (rb_funcall(self, rb_intern("escaped_line_breaks"), 0) == Qtrue)
-  //  extensions = extensions | EXT_ESCAPED_LINE_BREAKS;
 
   /* Compatibility overwrites all other extensions */
   if (rb_funcall(self, rb_intern("compatibility"), 0) == Qtrue)
     extensions = EXT_COMPATIBILITY;
   return extensions;
 }
+
+// *** MMD Engine management
 
 typedef struct engine_manager {
   mmd_engine *mmd_engine;
@@ -87,9 +83,38 @@ static VALUE rb_multimarkdown_start_engine(VALUE self, VALUE text) {
   engine_manager *manager;
   Data_Get_Struct(self, engine_manager, manager);
 
+  if (manager->mmd_engine) {
+    mmd_engine_free(manager->mmd_engine, true);
+  }
+
   manager->mmd_engine = mmd_engine_create_with_string(StringValuePtr(text), get_exts(self));
 
   return self;
+}
+
+//*** Public Methods
+
+static VALUE rb_multimarkdown_set_language(VALUE self, VALUE language) {
+  short lang = ENGLISH;
+  VALUE language_s = rb_funcall(language, rb_intern("to_s"), 0);
+
+  if (rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("de")) == Qtrue || rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("german")) == Qtrue) {
+    lang = GERMANGUILL;
+  }
+  else if (rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("ch")) == Qtrue || rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("de-ch")) == Qtrue || rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("swiss")) == Qtrue) {
+    lang = GERMAN;
+  }
+  else if (rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("nl")) == Qtrue || rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("dutch")) == Qtrue) {
+    lang = DUTCH;
+  }
+  else if (rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("fr")) == Qtrue || rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("french")) == Qtrue) {
+    lang = FRENCH;
+  }
+  else if (rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("sv")) == Qtrue || rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("swedish")) == Qtrue) {
+    lang = SWEDISH;
+  }
+
+  mmd_engine_set_language(get_mmd_engine(self), lang);
 }
 
 static VALUE rb_multimarkdown_to_html(VALUE self) {
@@ -126,12 +151,18 @@ static VALUE rb_multimarkdown_extract_metadata_value(VALUE self, VALUE key) {
   return result;
 }
 
+//*** Define Class
+
 void Init_multi_markdown() {
 
   rb_cMultiMarkdown = rb_define_class("MultiMarkdown", rb_cObject);
 
   rb_define_alloc_func(rb_cMultiMarkdown, rb_multimarkdown_allocate);
   rb_define_protected_method(rb_cMultiMarkdown, "start_engine", rb_multimarkdown_start_engine, 1);
+
+
+  //
+  rb_define_method(rb_cMultiMarkdown, "language=", rb_multimarkdown_set_language, 1);
 
   /* Document-method: MultiMarkdown#to_html
    *

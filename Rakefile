@@ -7,6 +7,8 @@ Bundler::GemHelper.install_tasks
 
 task :default => "test:unit"
 
+task :release => ["MultiMarkdown-6:init", "test:unit"]
+
 # ***** Build
 
 DLEXT = RbConfig::CONFIG['DLEXT']
@@ -21,8 +23,9 @@ namespace "MultiMarkdown-6" do
   task "init" do
     FileUtils.rm_rf(MMD_DIR)
     chdir('MultiMarkdown-6') do
-      sh 'make'
+      sh 'make' # creates build/version.h
 
+      # Copy all c and h files to MMD_DIR which will be released in the gem
       ['Sources/libMultiMarkdown', 'build'].each do |dir|
         chdir(dir) do
           Dir.glob('{.,include}/*.{h,c}').each do |s|
@@ -34,30 +37,30 @@ namespace "MultiMarkdown-6" do
         end
       end
 
+      # We have to disable the ObjectPool. see include/token.h
       token_h_file = "#{MMD_DIR}/include/token.h"
-      IO.write(token_h_file, (File.open(token_h_file) do |f|
+      IO.write(token_h_file, (File.open(token_h_file) { |f|
         f.read.gsub(/#define kUseObjectPool/, "#define kUseObjectPoolDisabled")
-      end))
+      }))
 
     end
   end
 
 end
 
-file 'ext/Makefile' => FileList['ext/{extconf.rb,*.c,*.h,*.rb}', "#{MMD_DIR}/*.{c,h}"] do
+file 'ext/Makefile' => FileList['ext/**/{extconf.rb,*.c,*.h,*.rb}'] do
   chdir('ext') do
     ruby 'extconf.rb'
   end
 end
 CLEAN.include 'ext/Makefile'
 
-file "ext/multi_markdown.#{DLEXT}" => FileList['ext/Makefile', 'ext/*.{c,h,rb}', "#{MMD_DIR}/*.{c,h}"] do |f|
+file "ext/multi_markdown.#{DLEXT}" => FileList['ext/Makefile', 'ext/**/*.{c,h,rb}'] do |f|
   chdir('ext') do
     sh 'make'
   end
 end
-CLEAN.include 'ext/*.{o,bundle,so}'
-CLEAN.include "#{MMD_DIR}/*.o"
+CLEAN.include 'ext/**/*.{o,bundle,so}'
 
 file "lib/multi_markdown.#{DLEXT}" => "ext/multi_markdown.#{DLEXT}" do |f|
   cp f.prerequisites, "lib/", :preserve => true
@@ -84,12 +87,8 @@ namespace :test do
   desc "Run conformance tests"
   task :conformance => :build do |t|
     script = "#{pwd}/bin/rmultimarkdown"
-    chdir("MultiMarkdown-6/MarkdownTest") do
-      sh "./MarkdownTest.pl --script='#{script}' --flags='-c' --tidy"
-      sh "./MarkdownTest.pl --script='#{script}' --testdir='MultiMarkdownTests'"
-      sh "./MarkdownTest.pl --script='#{script}' --testdir='MultiMarkdownTests' --flags='-t latex' --ext='.tex'"
-      sh "./MarkdownTest.pl --script='#{script}' --testdir='BeamerTests' --flags='-t latex' --ext='.tex'"
-      sh "./MarkdownTest.pl --script='#{script}' --testdir='MemoirTests' --flags='-t latex' --ext='.tex'"
+    chdir("MultiMarkdown-6/tests") do
+      sh "./MarkdownTest.pl --script='#{script}' --testdir='MMD6Tests'"
     end
   end
 

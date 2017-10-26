@@ -30,6 +30,19 @@ class MultiMarkdownTest < Test::Unit::TestCase
     assert_equal "<p>Hello <span><em>World</em></span>!</p>", multimarkdown.to_html.strip
   end
 
+  def test_multimarkdown_smart_quote_languages
+    multimarkdown = MultiMarkdown.new('Hello "world"')
+    assert_respond_to multimarkdown, :to_html
+    assert_equal '<p>Hello &#8220;world&#8221;</p>', multimarkdown.to_html.strip
+
+    multimarkdown.language = :de
+    assert_equal '<p>Hello &#8222;world&#8221;</p>', multimarkdown.to_html.strip
+
+    multimarkdown.language = :ch
+    assert_equal '<p>Hello &#171;world&#187;</p>', multimarkdown.to_html.strip
+  end
+
+
   def test_version_fits
     assert MultiMarkdown::VERSION =~ /^#{MultiMarkdown::MMD_VERSION}/,
         "Expected MultiMarkdown's version (#{MultiMarkdown::VERSION}) to start with the C library's version (#{MultiMarkdown::MMD_VERSION})"

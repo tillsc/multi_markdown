@@ -23,13 +23,13 @@ Gem::Specification.new do |s|
   s.authors     = ["Till Schulte-Coerne"]
   s.email       = ["till.schulte-coerne@innoq.com"]
   s.homepage    = "http://github.com/tillsc/multi_markdown"
-  s.summary     = "A MultiMarkdown 4 binding for Ruby"
+  s.summary     = "A MultiMarkdown 6 binding for Ruby"
   s.description = s.summary
   s.extra_rdoc_files = ['README.md', 'LICENSE']
 
   s.add_dependency "bundler"
 
-  s.files = %w(LICENSE README.md Rakefile rmultimarkdown.gemspec) + Dir.glob("{bin,lib,test}/**/*") + Dir.glob("{ext,MultiMarkdown-6}/*.{c,h,rb}")
+  s.files = %w(LICENSE README.md Rakefile rmultimarkdown.gemspec ext/Makefile) + Dir.glob("{bin,lib,test}/**/*") + Dir.glob("{ext}/**/*.{c,h,rb}")
   s.test_files = Dir.glob("{test}/**/*")
   s.executables = "rmultimarkdown"
   s.extensions = ['ext/extconf.rb']

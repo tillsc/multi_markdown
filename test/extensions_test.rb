@@ -79,48 +79,6 @@ eof
     assert !multimarkdown.to_html.include?('id="aheading"'),  "Found a tag with 'id=\"aheading\"': '#{multimarkdown.to_html}'"
   end
 
-  def disabled_test_filter_styles
-    mmd = '<style>p {color: red}</style> <span style="color: blue">It is blue!</span>'
-
-    # Don't change anything (default)
-    multimarkdown = MultiMarkdown.new(mmd)
-    assert multimarkdown.to_html.include?('<style>p {color: red}</style>'), "Didn't find '<style>' tag: '#{multimarkdown.to_html}'"
-    assert multimarkdown.to_html.include?('style="color: blue"'), "Didn't inline 'style': '#{multimarkdown.to_html}'"
-
-    # Disbale styles
-    multimarkdown = MultiMarkdown.new(mmd, :filter_styles)
-    assert !multimarkdown.to_html.include?('<style>p {color: red}</style>'), "Found '<style>' tag: '#{multimarkdown.to_html}'"
-    # Doesn't work: assert !multimarkdown.to_html.include?('style="color: blue"'), "Found inline 'style': '#{multimarkdown.to_html}'"
-  end
-
-  def disabled_test_filter_html
-    mmd = '<span>Hello from HTML</span>Pure Markdown'
-
-    # Don't change anything (default)
-    multimarkdown = MultiMarkdown.new(mmd)
-    assert multimarkdown.to_html.include?('<span>Hello from HTML</span>'), "Didn't find '<span>' tag: '#{multimarkdown.to_html}'"
-    assert multimarkdown.to_html.include?('Pure Markdown<'), "Didn't find Markdown: '#{multimarkdown.to_html}'"
-
-    # Disbale html
-    multimarkdown = MultiMarkdown.new(mmd, :filter_html)
-    assert_equal "<p>Hello from HTMLPure Markdown</p>", multimarkdown.to_html.strip
-  end
-
-  # TODO
-  # See https://github.com/fletcher/MultiMarkdown-4/issues/97
-  def disabled_test_markdown_in_html
-    mmd = 'Hello <span>[World](http://world.de)</span>!'
-
-    # No Markdown in html supported (default)
-    multimarkdown = MultiMarkdown.new(mmd)
-    assert_equal "<p>Hello <span>_World_</span>!</p>", multimarkdown.to_html.strip
-
-    # now with the extension turned on
-    multimarkdown = MultiMarkdown.new(mmd, :process_html)
-    assert_equal "<p>Hello <span><em>World</em></span>!</p>", multimarkdown.to_html.strip
-  end
-
-
   ## mmd6 is just throwing errors when :no_metadata is enabled
   def disabled_test_no_metadata
     mmd = "A: B\n\nBlabla"
