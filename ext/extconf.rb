@@ -1,10 +1,25 @@
 require 'mkmf'
 
-dir_config('multi_markdown')
+LIBDIR      = RbConfig::CONFIG['libdir']
+INCLUDEDIR  = RbConfig::CONFIG['includedir']
 
-mmd_objs = %w[parse_utilities.o parser.o GLibFacade.o writer.o text.o html.o latex.o memoir.o beamer.o lyx.o lyxbeamer.o opml.o odf.o critic.o rng.o rtf.o transclude.o]
+$CFLAGS="-fbracket-depth=512 -DNDEBUG=1"
+$CXXFLAGS="-fbracket-depth=512 -DNDEBUG=1"
 
-$objs = mmd_objs.map { |s| "../MultiMarkdown-6/build/#{s}" } + ["ruby_multi_markdown.o"]
+HEADER_DIRS = [
+  File.expand_path('../mmd', __FILE__),
+  File.expand_path('../mmd/include', __FILE__),
+  INCLUDEDIR,
+  '/usr/include'
+]
+
+dir_config('multi_markdown', HEADER_DIRS, [LIBDIR])
+
+find_header('libMultiMarkdown.h')
+find_header('d_string.h')
+find_header('stdio.h')
+
+$objs = Dir.glob('**/*.c').map { |s| s.gsub(/\.c$/, ".o") }
 
 create_header
 create_makefile('multi_markdown')

@@ -39,11 +39,11 @@ class MultiMarkdown
   # containing MultiMarkdown text. Variable other arguments may be supplied to
   # set various processing options. See MultiMarkdown::EXTENSIONS for more.
   def initialize(text, *extensions)
-    @text = text
     extensions.each do |ext|
       raise "Unknown extension: #{ext.inspect}" unless EXTENSIONS.keys.include?(ext.to_s)
       send("#{ext}=", true)
     end
+    self.start_engine(text);
   end
 
   alias extract_metadata extract_metadata_value
