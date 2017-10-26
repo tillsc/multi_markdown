@@ -1,5 +1,6 @@
 ext/Makefile
 ext/*.o
+ext/mmd/*.o
 ext/*.bundle
 ext/*.so
 ext/*.dll
@@ -10,3 +11,4 @@ pkg
 .ftags
 mkmf.log
 nbproject
+
