@@ -154,6 +154,11 @@ void mmd_print_char_opendocument(DString * out, char c) {
 			print_const("&gt;");
 			break;
 
+		case '\n':
+		case '\r':
+			print_const("<text:line-break/>\n");
+			break;
+
 		case '\t':
 			print_const("<text:tab/>");
 
@@ -246,6 +251,7 @@ void mmd_print_localized_char_opendocument(DString * out, unsigned short type, s
 					break;
 
 				case FRENCH:
+				case SPANISH:
 					print_const("&#171;");
 					break;
 
@@ -270,6 +276,7 @@ void mmd_print_localized_char_opendocument(DString * out, unsigned short type, s
 					break;
 
 				case FRENCH:
+				case SPANISH:
 					print_const("&#187;");
 					break;
 
@@ -288,6 +295,8 @@ void mmd_export_token_opendocument_raw(DString * out, const char * source, token
 	if (t == NULL) {
 		return;
 	}
+
+	char * temp;
 
 	switch (t->type) {
 		case AMPERSAND:
@@ -308,7 +317,20 @@ void mmd_export_token_opendocument_raw(DString * out, const char * source, token
 
 		case ESCAPED_CHARACTER:
 			print_const("\\");
-			mmd_print_char_opendocument(out, source[t->start + 1]);
+
+			if (t->next && t->next->type == TEXT_EMPTY && source[t->start + 1] == ' ') {
+			} else {
+				mmd_print_char_opendocument(out, source[t->start + 1]);
+			}
+
+			break;
+
+		case HTML_COMMENT_START:
+			print_const("&lt;!--");
+			break;
+
+		case HTML_COMMENT_STOP:
+			print_const("--&gt;");
 			break;
 
 		case HTML_ENTITY:
@@ -322,6 +344,60 @@ void mmd_export_token_opendocument_raw(DString * out, const char * source, token
 
 		case QUOTE_DOUBLE:
 			print_const("&quot;");
+			break;
+
+		case MARKER_H1:
+		case MARKER_H2:
+		case MARKER_H3:
+		case MARKER_H4:
+		case MARKER_H5:
+		case MARKER_H6:
+			temp = (char *) &source[t->start];
+
+			while (temp) {
+				switch (*temp) {
+					case '#':
+						print_const("#");
+						temp++;
+						break;
+
+					case ' ':
+						print_const(" ");
+						temp++;
+						break;
+
+					case '\t':
+						print_const("<text:tab/>");
+						temp++;
+						break;
+
+					default:
+						temp = NULL;
+						break;
+				}
+			}
+
+			break;
+
+		case MARKER_LIST_BULLET:
+		case MARKER_LIST_ENUMERATOR:
+			print_token(t);
+
+			temp = NULL;
+
+			if (t->next) {
+				temp = (char *) &source[t->next->start];
+			}
+
+			source = (char *) &source[t->start + t->len];
+
+			while (char_is_whitespace(*source) &&
+					((temp == NULL) ||
+					 (source < temp))) {
+				print_char(*source);
+				source++;
+			}
+
 			break;
 
 		case MATH_BRACKET_OPEN:
@@ -358,6 +434,9 @@ void mmd_export_token_opendocument_raw(DString * out, const char * source, token
 
 		case TEXT_EMPTY:
 			break;
+
+		case TEXT_LINEBREAK:
+			print_const("  ");
 
 		case TEXT_NL:
 			print_const("<text:line-break/>");
@@ -452,7 +531,7 @@ void mmd_export_link_opendocument(DString * out, const char * source, token * te
 		text->child->next->len++;
 	}
 
-	if (text) {
+	if (text && text->child) {
 		mmd_export_token_tree_opendocument(out, source, text->child, scratch);
 	}
 
@@ -810,6 +889,8 @@ void mmd_export_token_opendocument(DString * out, const char * source, token * t
 				free(temp_char);
 			}
 
+			trim_trailing_whitespace_d_string(out);
+
 			print_const("</text:h>");
 			scratch->padded = 0;
 			break;
@@ -976,7 +1057,7 @@ void mmd_export_token_opendocument(DString * out, const char * source, token * t
 				temp_token = t->next->child;
 
 				if (temp_token->next &&
-				        temp_token->next->type == PAIR_BRACKET) {
+						temp_token->next->type == PAIR_BRACKET) {
 					temp_token = temp_token->next;
 				}
 
@@ -1148,7 +1229,7 @@ void mmd_export_token_opendocument(DString * out, const char * source, token * t
 
 		case ESCAPED_CHARACTER:
 			if (!(scratch->extensions & EXT_COMPATIBILITY) &&
-			        (source[t->start + 1] == ' ')) {
+					(source[t->start + 1] == ' ')) {
 				print_const(" ");		// This is a non-breaking space character
 			} else {
 				mmd_print_char_opendocument(out, source[t->start + 1]);
@@ -1370,7 +1451,7 @@ void mmd_export_token_opendocument(DString * out, const char * source, token * t
 
 		case PAIR_BRACKET:
 			if ((scratch->extensions & EXT_NOTES) &&
-			        (t->next && t->next->type == PAIR_BRACKET_CITATION)) {
+					(t->next && t->next->type == PAIR_BRACKET_CITATION)) {
 				goto parse_citation;
 			}
 
@@ -1386,8 +1467,8 @@ void mmd_export_token_opendocument(DString * out, const char * source, token * t
 					temp_token = t->next;
 
 					if (temp_token &&
-					        ((temp_token->type == PAIR_BRACKET) ||
-					         (temp_token->type == PAIR_PAREN))) {
+							((temp_token->type == PAIR_BRACKET) ||
+							 (temp_token->type == PAIR_PAREN))) {
 						temp_token = temp_token->next;
 					}
 
@@ -1754,7 +1835,7 @@ parse_citation:
 
 			// Ignore if we're rejecting or accepting
 			if ((scratch->extensions & EXT_CRITIC_REJECT) ||
-			        (scratch->extensions & EXT_CRITIC_ACCEPT)) {
+					(scratch->extensions & EXT_CRITIC_ACCEPT)) {
 				break;
 			}
 
@@ -1774,7 +1855,7 @@ parse_citation:
 
 			// Ignore if we're rejecting or accepting
 			if ((scratch->extensions & EXT_CRITIC_REJECT) ||
-			        (scratch->extensions & EXT_CRITIC_ACCEPT)) {
+					(scratch->extensions & EXT_CRITIC_ACCEPT)) {
 				t->child->type = TEXT_EMPTY;
 				t->child->mate->type = TEXT_EMPTY;
 				mmd_export_token_tree_opendocument(out, source, t->child, scratch);
@@ -1803,8 +1884,8 @@ parse_citation:
 
 		case PAIR_CRITIC_SUB_DEL:
 			if ((scratch->extensions & EXT_CRITIC) &&
-			        (t->next) &&
-			        (t->next->type == PAIR_CRITIC_SUB_ADD)) {
+					(t->next) &&
+					(t->next->type == PAIR_CRITIC_SUB_ADD)) {
 				t->child->type = TEXT_EMPTY;
 				t->child->mate->type = TEXT_EMPTY;
 
@@ -1825,8 +1906,8 @@ parse_citation:
 
 		case PAIR_CRITIC_SUB_ADD:
 			if ((scratch->extensions & EXT_CRITIC) &&
-			        (t->prev) &&
-			        (t->prev->type == PAIR_CRITIC_SUB_DEL)) {
+					(t->prev) &&
+					(t->prev->type == PAIR_CRITIC_SUB_DEL)) {
 				t->child->type = TEXT_EMPTY;
 				t->child->mate->type = TEXT_EMPTY;
 
@@ -2025,6 +2106,7 @@ parse_citation:
 
 			break;
 
+		case PAIR_RAW_FILTER:
 		case RAW_FILTER_LEFT:
 		case TEXT_BACKSLASH:
 		case TEXT_BRACE_LEFT:

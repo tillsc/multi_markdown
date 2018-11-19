@@ -2,7 +2,7 @@
 
 	version.h -- MultiMarkdown
 
-	Copyright © 2016 - 2017 Fletcher T. Penney.
+	Copyright © 2016 - 2018 Fletcher T. Penney.
 
 
 	
@@ -23,8 +23,8 @@
 
 #define MULTIMARKDOWN_NAME "MultiMarkdown"
 
-#define MULTIMARKDOWN_VERSION "6.2.2"
-#define MULTIMARKDOWN_COPYRIGHT "Copyright © 2016 - 2017 Fletcher T. Penney."
+#define MULTIMARKDOWN_VERSION "6.4.0"
+#define MULTIMARKDOWN_COPYRIGHT "Copyright © 2016 - 2018 Fletcher T. Penney."
 
 #define MULTIMARKDOWN_LICENSE "\tThe `MultiMarkdown 6` project is released under the MIT License..\n"\
 "	\n"\
