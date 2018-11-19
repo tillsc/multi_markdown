@@ -113,6 +113,11 @@ void mmd_print_char_html(DString * out, char c, bool obfuscate) {
 			print_const("&gt;");
 			break;
 
+		case '\n':
+		case '\r':
+			print_const("<br/>\n");
+			break;
+
 		default:
 			if (obfuscate && ((int) c == (((int) c) & 127))) {
 				if (ran_num_next() % 2 == 0) {
@@ -209,6 +214,7 @@ void mmd_print_localized_char_html(DString * out, unsigned short type, scratch_p
 					break;
 
 				case FRENCH:
+				case SPANISH:
 					print_const("&#171;");
 					break;
 
@@ -233,6 +239,7 @@ void mmd_print_localized_char_html(DString * out, unsigned short type, scratch_p
 					break;
 
 				case FRENCH:
+				case SPANISH:
 					print_const("&#187;");
 					break;
 
@@ -255,11 +262,6 @@ static char * strip_dimension_units(char *original) {
 
 	for (i = 0; result[i]; i++) {
 		result[i] = tolower(result[i]);
-	}
-
-	if (strstr(&result[strlen(result) - 2], "px")) {
-		// Leave 'px' alone
-		return result;
 	}
 
 	// Trim anything other than digits
@@ -371,6 +373,12 @@ void mmd_export_image_html(DString * out, const char * source, token * text, lin
 		if (strcmp(a->key, "width") == 0) {
 			width = strip_dimension_units(a->value);
 
+			if (strlen(width) + 2 == strlen(a->value)) {
+				if (strcmp(&(a->value[strlen(width)]), "px") == 0) {
+					a->value[strlen(width)] = '\0';
+				}
+			}
+
 			if (strcmp(a->value, width) == 0) {
 				print_const(" ");
 				print(a->key);
@@ -385,6 +393,12 @@ void mmd_export_image_html(DString * out, const char * source, token * text, lin
 			}
 		} else if (strcmp(a->key, "height") == 0) {
 			height = strip_dimension_units(a->value);
+
+			if (strlen(height) + 2 == strlen(a->value)) {
+				if (strcmp(&(a->value[strlen(height)]), "px") == 0) {
+					a->value[strlen(height)] = '\0';
+				}
+			}
 
 			if (strcmp(a->value, height) == 0) {
 				print_const(" ");
@@ -673,6 +687,8 @@ void mmd_export_token_html(DString * out, const char * source, token * t, scratc
 			}
 
 			mmd_export_token_tree_html(out, source, t->child, scratch);
+			trim_trailing_whitespace_d_string(out);
+
 			printf("</h%1d>", temp_short + scratch->base_header_level - 1);
 			scratch->padded = 0;
 			break;
@@ -883,7 +899,7 @@ void mmd_export_token_html(DString * out, const char * source, token * t, scratc
 				temp_token = t->next->child;
 
 				if (temp_token->next &&
-				        temp_token->next->type == PAIR_BRACKET) {
+						temp_token->next->type == PAIR_BRACKET) {
 					temp_token = temp_token->next;
 				}
 
@@ -1125,7 +1141,7 @@ void mmd_export_token_html(DString * out, const char * source, token * t, scratc
 
 		case ESCAPED_CHARACTER:
 			if (!(scratch->extensions & EXT_COMPATIBILITY) &&
-			        (source[t->start + 1] == ' ')) {
+					(source[t->start + 1] == ' ')) {
 				print_const("&nbsp;");
 			} else {
 				mmd_print_char_html(out, source[t->start + 1], false);
@@ -1344,7 +1360,7 @@ void mmd_export_token_html(DString * out, const char * source, token * t, scratc
 
 		case PAIR_BRACKET:
 			if ((scratch->extensions & EXT_NOTES) &&
-			        (t->next && t->next->type == PAIR_BRACKET_CITATION)) {
+					(t->next && t->next->type == PAIR_BRACKET_CITATION)) {
 				goto parse_citation;
 			}
 
@@ -1360,8 +1376,8 @@ void mmd_export_token_html(DString * out, const char * source, token * t, scratc
 					temp_token = t->next;
 
 					if (temp_token &&
-					        ((temp_token->type == PAIR_BRACKET) ||
-					         (temp_token->type == PAIR_PAREN))) {
+							((temp_token->type == PAIR_BRACKET) ||
+							 (temp_token->type == PAIR_PAREN))) {
 						temp_token = temp_token->next;
 					}
 
@@ -1519,11 +1535,11 @@ parse_citation:
 						if (temp_short2 == scratch->used_citations->size) {
 							// This is a re-use of a previously used note
 							printf("<a href=\"#cn:%d\" title=\"%s\" class=\"citation\">(%d)</a>",
-							       temp_short, LC("see citation"), temp_short);
+								   temp_short, LC("see citation"), temp_short);
 						} else {
 							// This is the first time this note was used
 							printf("<a href=\"#cn:%d\" id=\"cnref:%d\" title=\"%s\" class=\"citation\">(%d)</a>",
-							       temp_short, temp_short, LC("see citation"), temp_short);
+								   temp_short, temp_short, LC("see citation"), temp_short);
 						}
 					} else {
 						// Locator present
@@ -1531,11 +1547,11 @@ parse_citation:
 						if (temp_short2 == scratch->used_citations->size) {
 							// This is a re-use of a previously used note
 							printf("<a href=\"#cn:%d\" title=\"%s\" class=\"citation\">(%s, %d)</a>",
-							       temp_short, LC("see citation"), temp_char, temp_short);
+								   temp_short, LC("see citation"), temp_char, temp_short);
 						} else {
 							// This is the first time this note was used
 							printf("<a href=\"#cn:%d\" id=\"cnref:%d\" title=\"%s\" class=\"citation\">(%s, %d)</a>",
-							       temp_short, temp_short, LC("see citation"), temp_char, temp_short);
+								   temp_short, temp_short, LC("see citation"), temp_char, temp_short);
 						}
 					}
 				} else {
@@ -1582,7 +1598,7 @@ parse_citation:
 					}
 
 					printf("<a href=\"#fn:%d\" title=\"%s\" class=\"footnote\"><sup>%d</sup></a>",
-					       temp_short3, LC("see footnote"), temp_short);
+						   temp_short3, LC("see footnote"), temp_short);
 				} else {
 					// This is the first time this note was used
 
@@ -1594,7 +1610,7 @@ parse_citation:
 					}
 
 					printf("<a href=\"#fn:%d\" id=\"fnref:%d\" title=\"%s\" class=\"footnote\"><sup>%d</sup></a>",
-					       temp_short3, temp_short3, LC("see footnote"), temp_short);
+						   temp_short3, temp_short3, LC("see footnote"), temp_short);
 				}
 			} else {
 				// Note-based syntax disabled
@@ -1634,7 +1650,7 @@ parse_citation:
 					// This is a re-use of a previously used note
 
 					printf("<a href=\"#gn:%d\" title=\"%s\" class=\"glossary\">",
-					       temp_short, LC("see glossary"));
+						   temp_short, LC("see glossary"));
 					mmd_print_string_html(out, temp_note->clean_text, false);
 					print_const("</a>");
 				} else {
@@ -1642,7 +1658,7 @@ parse_citation:
 
 
 					printf("<a href=\"#gn:%d\" id=\"gnref:%d\" title=\"%s\" class=\"glossary\">",
-					       temp_short, temp_short, LC("see glossary"));
+						   temp_short, temp_short, LC("see glossary"));
 					mmd_print_string_html(out, temp_note->clean_text, false);
 					print_const("</a>");
 				}
@@ -1719,7 +1735,7 @@ parse_citation:
 
 			// Ignore if we're rejecting or accepting
 			if ((scratch->extensions & EXT_CRITIC_REJECT) ||
-			        (scratch->extensions & EXT_CRITIC_ACCEPT)) {
+					(scratch->extensions & EXT_CRITIC_ACCEPT)) {
 				break;
 			}
 
@@ -1739,7 +1755,7 @@ parse_citation:
 
 			// Ignore if we're rejecting or accepting
 			if ((scratch->extensions & EXT_CRITIC_REJECT) ||
-			        (scratch->extensions & EXT_CRITIC_ACCEPT)) {
+					(scratch->extensions & EXT_CRITIC_ACCEPT)) {
 				t->child->type = TEXT_EMPTY;
 				t->child->mate->type = TEXT_EMPTY;
 				mmd_export_token_tree_html(out, source, t->child, scratch);
@@ -1768,8 +1784,8 @@ parse_citation:
 
 		case PAIR_CRITIC_SUB_DEL:
 			if ((scratch->extensions & EXT_CRITIC) &&
-			        (t->next) &&
-			        (t->next->type == PAIR_CRITIC_SUB_ADD)) {
+					(t->next) &&
+					(t->next->type == PAIR_CRITIC_SUB_ADD)) {
 				t->child->type = TEXT_EMPTY;
 				t->child->mate->type = TEXT_EMPTY;
 
@@ -1790,8 +1806,8 @@ parse_citation:
 
 		case PAIR_CRITIC_SUB_ADD:
 			if ((scratch->extensions & EXT_CRITIC) &&
-			        (t->prev) &&
-			        (t->prev->type == PAIR_CRITIC_SUB_DEL)) {
+					(t->prev) &&
+					(t->prev->type == PAIR_CRITIC_SUB_DEL)) {
 				t->child->type = TEXT_EMPTY;
 				t->child->mate->type = TEXT_EMPTY;
 
@@ -2044,6 +2060,8 @@ void mmd_export_token_html_raw(DString * out, const char * source, token * t, sc
 		return;
 	}
 
+	char * temp;
+
 	switch (t->type) {
 		case BACKTICK:
 			print_token(t);
@@ -2065,14 +2083,68 @@ void mmd_export_token_html_raw(DString * out, const char * source, token * t, sc
 			print_const("&lt;");
 			break;
 
+		case CRITIC_COM_OPEN:
+			print_const("{&gt;&gt;");
+			break;
+
+		case CRITIC_COM_CLOSE:
+			print_const("&lt;&lt;}");
+			break;
+
+		case CRITIC_SUB_DIV:
+			print_const("~&gt;");
+			break;
+
+		case CRITIC_SUB_DIV_A:
+			print_const("~");
+			break;
+
+		case CRITIC_SUB_DIV_B:
+			print_const("&gt;");
+			break;
+
 		case ESCAPED_CHARACTER:
 			print_const("\\");
-			mmd_print_char_html(out, source[t->start + 1], false);
+
+			if (t->next && t->next->type == TEXT_EMPTY && source[t->start + 1] == ' ') {
+			} else {
+				mmd_print_char_html(out, source[t->start + 1], false);
+			}
+
+			break;
+
+		case HTML_COMMENT_START:
+			print_const("&lt;!--");
+			break;
+
+		case HTML_COMMENT_STOP:
+			print_const("--&gt;");
 			break;
 
 		case HTML_ENTITY:
 			print_const("&amp;");
 			d_string_append_c_array(out, &(source[t->start + 1]), t->len - 1);
+			break;
+
+		case MARKER_LIST_BULLET:
+		case MARKER_LIST_ENUMERATOR:
+			print_token(t);
+
+			temp = NULL;
+
+			if (t->next) {
+				temp = (char *) &source[t->next->start];
+			}
+
+			source = (char *) &source[t->start + t->len];
+
+			while (char_is_whitespace(*source) &&
+					((temp == NULL) ||
+					 (source < temp))) {
+				print_char(*source);
+				source++;
+			}
+
 			break;
 
 		case MATH_BRACKET_OPEN:
@@ -2084,21 +2156,11 @@ void mmd_export_token_html_raw(DString * out, const char * source, token * t, sc
 			break;
 
 		case MATH_DOLLAR_SINGLE:
-			if (t->mate) {
-				(t->start < t->mate->start) ? ( print_const("\\(") ) : ( print_const("\\)") );
-			} else {
-				print_const("$");
-			}
-
+			print_const("$");
 			break;
 
 		case MATH_DOLLAR_DOUBLE:
-			if (t->mate) {
-				(t->start < t->mate->start) ? ( print_const("\\[") ) : ( print_const("\\]") );
-			} else {
-				print_const("$$");
-			}
-
+			print_const("$$");
 			break;
 
 		case MATH_PAREN_OPEN:
@@ -2165,6 +2227,24 @@ void mmd_export_token_html_math(DString * out, const char * source, token * t, s
 
 		case MATH_BRACKET_CLOSE:
 			print_const("\\]");
+			break;
+
+		case MATH_DOLLAR_SINGLE:
+			if (t->mate) {
+				(t->start < t->mate->start) ? ( print_const("\\(") ) : ( print_const("\\)") );
+			} else {
+				print_const("$");
+			}
+
+			break;
+
+		case MATH_DOLLAR_DOUBLE:
+			if (t->mate) {
+				(t->start < t->mate->start) ? ( print_const("\\[") ) : ( print_const("\\]") );
+			} else {
+				print_const("$$");
+			}
+
 			break;
 
 		case MATH_PAREN_OPEN:
@@ -2248,12 +2328,14 @@ void mmd_start_complete_html(DString * out, const char * source, scratch_pad * s
 		} else if (strcmp(m->key, "latexbegin") == 0) {
 		} else if (strcmp(m->key, "latexconfig") == 0) {
 		} else if (strcmp(m->key, "latexfooter") == 0) {
+		} else if (strcmp(m->key, "latexheader") == 0) {
 		} else if (strcmp(m->key, "latexheaderlevel") == 0) {
 		} else if (strcmp(m->key, "latexinput") == 0) {
 		} else if (strcmp(m->key, "latexleader") == 0) {
 		} else if (strcmp(m->key, "latexmode") == 0) {
 		} else if (strcmp(m->key, "mmdfooter") == 0) {
 		} else if (strcmp(m->key, "mmdheader") == 0) {
+		} else if (strcmp(m->key, "odfheader") == 0) {
 		} else if (strcmp(m->key, "quoteslanguage") == 0) {
 		} else if (strcmp(m->key, "title") == 0) {
 			print_const("\t<title>");
@@ -2278,6 +2360,17 @@ void mmd_start_complete_html(DString * out, const char * source, scratch_pad * s
 
 
 void mmd_end_complete_html(DString * out, const char * source, scratch_pad * scratch) {
+	meta * m;
+
+	// Iterate over metadata keys
+
+	for (m = scratch->meta_hash; m != NULL; m = m->hh.next) {
+		if (strcmp(m->key, "htmlfooter") == 0) {
+			print(m->value);
+			print_char('\n');
+		}
+	}
+
 	print_const("\n\n</body>\n</html>\n");
 }
 
