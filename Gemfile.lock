@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rmultimarkdown (6.4.0.1)
+    rmultimarkdown (6.4.0.2)
       bundler
 
 GEM
@@ -23,4 +23,4 @@ DEPENDENCIES
   test-unit
 
 BUNDLED WITH
-   1.14.6
+   1.17.1
