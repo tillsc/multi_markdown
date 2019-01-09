@@ -3,12 +3,12 @@ require 'mkmf'
 LIBDIR      = RbConfig::CONFIG['libdir']
 INCLUDEDIR  = RbConfig::CONFIG['includedir']
 
-if RbConfig::CONFIG['CC'] == 'clang'
+if RbConfig::CONFIG['CC'] == 'clang' || RbConfig::CONFIG['CC_VERSION'].to_s.include?("clang")
   $CFLAGS="#{$CFLAGS} -fbracket-depth=512 -DNDEBUG=1"
   $CXXFLAGS="#{$CXXFLAGS} -fbracket-depth=512 -DNDEBUG=1"
 else
-  $CFLAGS="#{$CFLAGS} -std=c99 -fbracket-depth=512 -DNDEBUG=1"
-  $CXXFLAGS="#{$CXXFLAGS} -std=c99 -fbracket-depth=512 -DNDEBUG=1"
+  $CFLAGS="#{$CFLAGS} -std=c99 -DNDEBUG=1"
+  $CXXFLAGS="#{$CXXFLAGS} -std=c99 -DNDEBUG=1"
 end
 
 HEADER_DIRS = [
