@@ -3,7 +3,7 @@ require 'mkmf'
 LIBDIR      = RbConfig::CONFIG['libdir']
 INCLUDEDIR  = RbConfig::CONFIG['includedir']
 
-if RbConfig::CONFIG['CC'] == 'clang' || RbConfig::CONFIG['CC_VERSION'].to_s.include?("clang")
+if RbConfig::CONFIG['CC'] == 'clang' || RbConfig::CONFIG['CC_VERSION_MESSAGE'].to_s.include?('clang')
   $CFLAGS="#{$CFLAGS} -fbracket-depth=512 -DNDEBUG=1"
   $CXXFLAGS="#{$CXXFLAGS} -fbracket-depth=512 -DNDEBUG=1"
 else
