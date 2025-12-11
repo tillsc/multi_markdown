@@ -15,7 +15,7 @@ task :release => ["MultiMarkdown-6:init", "test:unit"]
 DLEXT = RbConfig::CONFIG['DLEXT']
 MMD_DIR = File.expand_path("../ext/mmd", __FILE__)
 
-# For Mac OS X -- prevents prevent additional ._* files being added to tarball
+# For Mac OS X -- prevents additional ._* files being added to tarball
 ENV['COPYFILE_DISABLE'] = 'true'
 
 namespace "MultiMarkdown-6" do
@@ -24,7 +24,7 @@ namespace "MultiMarkdown-6" do
   task "init" do
     FileUtils.rm_rf(MMD_DIR)
     chdir('MultiMarkdown-6') do
-      sh 'make' # creates build/version.h
+      sh 'CMAKE_POLICY_VERSION_MINIMUM=3.5 make' # creates build/version.h
 
       # Copy all c and h files to MMD_DIR which will be released in the gem
       ['src', 'build'].each do |dir|
