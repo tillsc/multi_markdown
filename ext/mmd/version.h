@@ -1,8 +1,8 @@
 /*
 
-	version.h -- MultiMarkdown
+	version.h -- libMultiMarkdown
 
-	Copyright © 2016 - 2018 Fletcher T. Penney.
+	Copyright © 2016 - 2023 Fletcher T. Penney.
 
 
 	
@@ -18,15 +18,15 @@
 **/
 
 
-#ifndef FILE_MULTIMARKDOWN_H
-#define FILE_MULTIMARKDOWN_H
+#ifndef FILE_LIBMULTIMARKDOWN_H
+#define FILE_LIBMULTIMARKDOWN_H
 
-#define MULTIMARKDOWN_NAME "MultiMarkdown"
+#define LIBMULTIMARKDOWN_NAME "MultiMarkdown"
 
-#define MULTIMARKDOWN_VERSION "6.4.0"
-#define MULTIMARKDOWN_COPYRIGHT "Copyright © 2016 - 2018 Fletcher T. Penney."
+#define LIBMULTIMARKDOWN_VERSION "6.7.0"
+#define LIBMULTIMARKDOWN_COPYRIGHT "Copyright © 2016 - 2023 Fletcher T. Penney."
 
-#define MULTIMARKDOWN_LICENSE "\tThe `MultiMarkdown 6` project is released under the MIT License..\n"\
+#define LIBMULTIMARKDOWN_LICENSE "\tThe `MultiMarkdown 6` project is released under the MIT License..\n"\
 "	\n"\
 "	GLibFacade.c and GLibFacade.h are from the MultiMarkdown v4 project:\n"\
 "	\n"\

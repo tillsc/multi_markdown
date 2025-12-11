@@ -2,7 +2,7 @@
 
 	MultiMarkdown -- Lightweight markup processor to produce HTML, LaTeX, and more.
 
-	@file zip.h
+	@file itmz-reader.h
 
 	@brief
 
@@ -14,7 +14,7 @@
 
 /*
 
-	Copyright © 2016 - 2017 Fletcher T. Penney.
+	Copyright © 2016 - 2019 Fletcher T. Penney.
 
 
 	The `MultiMarkdown 6` project is released under the MIT License..
@@ -102,25 +102,10 @@
 */
 
 
-#ifndef ZIP_MULTIMARKDOWN_H
-#define ZIP_MULTIMARKDOWN_H
+#ifndef ITMZ_READER_MULTIMARKDOWN_H
+#define ITMZ_READER_MULTIMARKDOWN_H
 
-#include "miniz.h"
-
-// Create new zip archive
-void zip_new_archive(mz_zip_archive * pZip);
-
-// Unzip archive to specified file path
-mz_bool unzip_archive_to_path(mz_zip_archive * pZip, const char * path);
-
-// Unzip archive (as plain binary data) to specified file path
-mz_bool unzip_data_to_path(const void * data, size_t size, const char * path);
-
-// Extract single file from archive
-mz_bool unzip_file_from_archive(mz_zip_archive * pZip, const char * filename, DString * destination);
-
-// Extract single file from archive
-mz_bool unzip_file_from_data(const void * data, size_t size, const char * filename, DString * file);
-
+/// Create a token chain from source ITMZ string
+void mmd_convert_itmz_string(mmd_engine * e, size_t start, size_t len);
 
 #endif

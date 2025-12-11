@@ -56,6 +56,7 @@
 #include "latex.h"
 #include "beamer.h"
 #include "parser.h"
+#include "stack.h"
 
 #define print(x) d_string_append(out, x)
 #define print_const(x) d_string_append_c_array(out, x, sizeof(x) - 1)
@@ -178,6 +179,7 @@ void mmd_export_token_beamer(DString * out, const char * source, token * t, scra
 					// Raw source
 					if (raw_filter_text_matches(temp_char, FORMAT_BEAMER)) {
 						switch (t->child->tail->type) {
+							case CODE_FENCE_LINE:
 							case LINE_FENCE_BACKTICK_3:
 							case LINE_FENCE_BACKTICK_4:
 							case LINE_FENCE_BACKTICK_5:
@@ -192,7 +194,10 @@ void mmd_export_token_beamer(DString * out, const char * source, token * t, scra
 							d_string_append_c_array(out, &source[t->child->next->start], temp_token->start - t->child->next->start);
 							scratch->padded = 1;
 						} else {
-							d_string_append_c_array(out, &source[t->child->start + t->child->len], t->start + t->len - t->child->next->start);
+							if (t->child->next) {
+								d_string_append_c_array(out, &source[t->child->start + t->child->len], t->start + t->len - t->child->next->start);
+							}
+
 							scratch->padded = 0;
 						}
 					}
@@ -365,6 +370,12 @@ void mmd_end_complete_beamer(DString * out, const char * source, scratch_pad * s
 
 	if (m) {
 		printf("\\input{%s}\n\n", m->value);
+	} else {
+		m = extract_meta_from_stack(scratch, "latexconfig");
+
+		if (m) {
+			printf("\\input{mmd6-%s-footer}\n", m->value);
+		}
 	}
 
 	print_const("\\end{document}");

@@ -2,7 +2,7 @@
 
 	MultiMarkdown -- Lightweight markup processor to produce HTML, LaTeX, and more.
 
-	@file opml-reader.c
+	@file itmz-reader.c
 
 	@brief
 
@@ -106,17 +106,19 @@
 
 #include "d_string.h"
 #include "mmd.h"
-#include "opml-reader.h"
-#include "opml-lexer.h"
-#include "opml-parser.h"
+#include "itmz-reader.h"
+#include "itmz-lexer.h"
+#include "itmz-parser.h"
 #include "token.h"
 #include "xml.h"
+#include "zip.h"
+
 
 // Basic parser function declarations
-void * OPMLAlloc(void *);
-void OPML(void *, int, void *, void *);
-void OPMLFree(void *, void *);
-void OPMLTrace(FILE * stream, char * zPrefix);
+void * ITMZAlloc(void *);
+void ITMZ(void *, int, void *, void *);
+void ITMZFree(void *, void *);
+void ITMZTrace(FILE * stream, char * zPrefix);
 
 
 #define print(x) d_string_append(out, x)
@@ -125,8 +127,8 @@ void OPMLTrace(FILE * stream, char * zPrefix);
 #define printf(...) d_string_append_printf(out, __VA_ARGS__)
 
 
-/// Create a token chain from source OPML string
-token * tokenize_opml_string(mmd_engine * e, size_t start, size_t len) {
+/// Create a token chain from source ITMZ string
+token * tokenize_itmz_string(mmd_engine * e, size_t start, size_t len) {
 
 	// Create a scanner (for re2c)
 	Scanner s;
@@ -145,7 +147,7 @@ token * tokenize_opml_string(mmd_engine * e, size_t start, size_t len) {
 
 	do {
 		// Scan for next token (type of 0 means there is nothing left);
-		type = opml_scan(&s, stop);
+		type = itmz_scan(&s, stop);
 
 		//if (type && s.start != last_stop) {
 		if (s.start != last_stop) {
@@ -171,7 +173,7 @@ token * tokenize_opml_string(mmd_engine * e, size_t start, size_t len) {
 				// 0 means we finished with input
 				break;
 
-			case OPML_WSNL:
+			case ITMZ_WSNL:
 				// Ignore for now
 				break;
 
@@ -189,14 +191,14 @@ token * tokenize_opml_string(mmd_engine * e, size_t start, size_t len) {
 }
 
 
-void parse_opml_token_chain(mmd_engine * e, token * chain) {
+void parse_itmz_token_chain(mmd_engine * e, token * chain) {
 
-	void * pParser = OPMLAlloc (malloc);		// Create a parser (for lemon)
+	void * pParser = ITMZAlloc (malloc);		// Create a parser (for lemon)
 	token * walker = chain->next;				// Walk the existing tree
 	token * remainder;							// Hold unparsed tail of chain
 
 #ifndef NDEBUG
-	OPMLTrace(stderr, "parser >>");
+	ITMZTrace(stderr, "parser >>");
 #endif
 
 	// Remove existing token tree
@@ -205,7 +207,7 @@ void parse_opml_token_chain(mmd_engine * e, token * chain) {
 	while (walker != NULL) {
 		remainder = walker->next;
 
-		OPML(pParser, walker->type, walker, e);
+		ITMZ(pParser, walker->type, walker, e);
 
 		walker = remainder;
 	}
@@ -214,7 +216,7 @@ void parse_opml_token_chain(mmd_engine * e, token * chain) {
 #ifndef NDEBUG
 	fprintf(stderr, "\nFinish parse\n");
 #endif
-	OPML(pParser, 0, NULL, e);
+	ITMZ(pParser, 0, NULL, e);
 
 	if (e->root) {
 		// Successful parse -- process to new source document
@@ -222,20 +224,25 @@ void parse_opml_token_chain(mmd_engine * e, token * chain) {
 		DString * metadata = d_string_new("");
 		DString * out = final;
 
-		size_t header_level = 0;
+		size_t header_level = -1;	// ITMZ has a dummy root note
 		size_t start, len;
 
 		walker = chain->next;
 
 		while (walker) {
 			switch (walker->type) {
-				case OPML_OUTLINE_PREAMBLE:
-				case OPML_OUTLINE_OPEN:
-				case OPML_OUTLINE_SELF_CLOSE:
+				case ITMZ_TOPIC_PREAMBLE:
+				case ITMZ_TOPIC_OPEN:
+				case ITMZ_TOPIC_SELF_CLOSE:
 					header_level++;
 
-					// Advance over `<outline`
-					start = walker->start + 8;
+					if (header_level == 0) {
+						// ITMZ has a dummy parent node
+						break;
+					}
+
+					// Advance over `<topic`
+					start = walker->start + 6;
 
 					char * text = xml_extract_named_attribute(e->dstr->str, start, "text");
 
@@ -268,7 +275,7 @@ void parse_opml_token_chain(mmd_engine * e, token * chain) {
 										print_char('#');
 									}
 								} else {
-									// Print Setext Header
+									// Setext Header
 									switch (header_level) {
 										case 1:
 											print_const("\n======");
@@ -287,8 +294,8 @@ void parse_opml_token_chain(mmd_engine * e, token * chain) {
 						free(text);
 					}
 
-					// Print contents
-					text = xml_extract_named_attribute(e->dstr->str, start, "_note");
+					// Print contents of topic
+					text = xml_extract_named_attribute(e->dstr->str, start, "note");
 
 					if (text) {
 						print_xml_as_text(out, text, 0, strlen(text));
@@ -313,19 +320,19 @@ void parse_opml_token_chain(mmd_engine * e, token * chain) {
 						}
 					}
 
-					if (walker->type == OPML_OUTLINE_SELF_CLOSE) {
+					if (walker->type == ITMZ_TOPIC_SELF_CLOSE) {
 						header_level--;
 					}
 
 					break;
 
-				case OPML_OUTLINE_METADATA:
+				case ITMZ_TOPIC_METADATA:
 					// Now handle metadata
 					out = metadata;
 					header_level++;
 					break;
 
-				case OPML_OUTLINE_CLOSE:
+				case ITMZ_TOPIC_CLOSE:
 					header_level--;
 					break;
 
@@ -354,12 +361,28 @@ void parse_opml_token_chain(mmd_engine * e, token * chain) {
 	// Clean up token chain
 	token_tree_free(chain);
 
-	OPMLFree(pParser, free);
+	ITMZFree(pParser, free);
 }
 
 
 /// Create a token chain from source OPML string
-void mmd_convert_opml_string(mmd_engine * e, size_t start, size_t len) {
-	token * chain = tokenize_opml_string(e, start, len);
-	parse_opml_token_chain(e, chain);
+void mmd_convert_itmz_string(mmd_engine * e, size_t start, size_t len) {
+	// Need to extract mapdata.xml file from the zip archive
+	DString * text = d_string_new("");
+
+	mz_bool status = unzip_file_from_data(e->dstr->str, e->dstr->currentStringLength, "mapdata.xml", text);
+
+	if (status) {
+		free(e->dstr->str);
+		e->dstr->str = text->str;
+		e->dstr->currentStringLength = text->currentStringLength;
+
+		d_string_free(text, false);
+
+		// Now convert mapdata.xml -> MMD text
+		token * chain = tokenize_itmz_string(e, 0, e->dstr->currentStringLength);
+		parse_itmz_token_chain(e, chain);
+	} else {
+		d_string_free(text, true);
+	}
 }

@@ -2,9 +2,9 @@
 
 	MultiMarkdown -- Lightweight markup processor to produce HTML, LaTeX, and more.
 
-	@file opml.c
+	@file itmz.c
 
-	@brief Export to OPML (Outline Processor Markup Language)
+	@brief Export to iThoughts Mind-Mapping format
 
 
 	@author	Fletcher T. Penney
@@ -106,10 +106,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "opml.h"
+#include "itmz.h"
 #include "parser.h"
 #include "stack.h"
-
+#include "uuid.h"
+#include "zip.h"
 
 #define print(x) d_string_append(out, x)
 #define print_const(x) d_string_append_c_array(out, x, sizeof(x) - 1)
@@ -118,9 +119,9 @@
 #define print_token(t) d_string_append_c_array(out, &(source[t->start]), t->len)
 #define print_localized(x) mmd_print_localized_char_latex(out, x, scratch)
 
+#define print_uuid() print_uuid_itmz(out);
 
-
-void mmd_print_source_opml(DString * out, const char * source, size_t start, size_t len) {
+void mmd_print_source_itmz(DString * out, const char * source, size_t start, size_t len) {
 	const char * s_start = &source[start];
 	const char * s_stop = &source[start + len];
 
@@ -170,7 +171,16 @@ void mmd_print_source_opml(DString * out, const char * source, size_t start, siz
 }
 
 
-void mmd_check_preamble_opml(DString * out, token * t, scratch_pad * scratch) {
+void print_uuid_itmz(DString * out) {
+	char * uuid = uuid_new();
+	print_const("uuid=\"");
+	print(uuid);
+	print_const("\" ");
+	free(uuid);
+}
+
+
+void mmd_check_preamble_itmz(DString * out, token * t, scratch_pad * scratch) {
 	if (t) {
 		token * walker = t->child;
 
@@ -192,7 +202,9 @@ void mmd_check_preamble_opml(DString * out, token * t, scratch_pad * scratch) {
 					break;
 
 				default:
-					print_const("<outline text=\"&gt;&gt;Preamble&lt;&lt;\" _note=\"");
+					print_const("<topic ");
+					print_uuid();
+					print_const("text=\"&gt;&gt;Preamble&lt;&lt;\" note=\"");
 					scratch->opml_item_closed = 0;
 					stack_push(scratch->outline_stack, walker);
 					walker = NULL;
@@ -204,49 +216,59 @@ void mmd_check_preamble_opml(DString * out, token * t, scratch_pad * scratch) {
 
 
 /// Export title from metadata
-void mmd_export_title_opml(DString * out, const char * source, scratch_pad * scratch) {
+void mmd_export_title_itmz(DString * out, const char * source, scratch_pad * scratch) {
 	meta * m;
 
 	HASH_FIND_STR(scratch->meta_hash, "title", m);
 
+	// iThoughts requires a top level topic to anchor the others
 	if (m) {
-		print_const("<head><title>");
-
+		print_const("<topic ");
+		print_uuid();
+		print_const("text=\"");
 		size_t len = strlen(m->value);
-		mmd_print_source_opml(out, m->value, 0, len);
+		mmd_print_source_itmz(out, m->value, 0, len);
 
-		print_const("</title></head>\n");
+		print_const("\">\n");
+	} else {
+		print_const("<topic ");
+		print_uuid();
+		print_const("text=\"\">\n");
 	}
 }
 
 
 /// Export all metadata
-void mmd_export_metadata_opml(DString * out, const char * source, scratch_pad * scratch) {
+void mmd_export_metadata_itmz(DString * out, const char * source, scratch_pad * scratch) {
 	meta * m;
 	size_t len;
 
 	if (scratch->meta_hash) {
-		print_const("<outline text=\"&gt;&gt;Metadata&lt;&lt;\">\n");
+		print_const("<topic ");
+		print_uuid();
+		print_const("text=\"&gt;&gt;Metadata&lt;&lt;\">\n");
 
 		for (m = scratch->meta_hash; m != NULL; m = m->hh.next) {
-			print_const("<outline text=\"");
+			print_const("<topic ");
+			print_uuid();
+			print_const("text=\"");
 			len = strlen(m->key);
-			mmd_print_source_opml(out, m->key, 0, len);
+			mmd_print_source_itmz(out, m->key, 0, len);
 
-			print_const("\" _note=\"");
+			print_const("\" note=\"");
 			len = strlen(m->value);
-			mmd_print_source_opml(out, m->value, 0, len);
+			mmd_print_source_itmz(out, m->value, 0, len);
 
 			print_const("\"/>\n");
 		}
 
-		print_const("</outline>\n");
+		print_const("</topic>\n");
 	}
 }
 
 
 /// Track outline levels to create proper outline structure
-void mmd_outline_add_opml(DString * out, const char * source, token * current, scratch_pad * scratch) {
+void mmd_outline_add_itmz(DString * out, const char * source, token * current, scratch_pad * scratch) {
 	token * t;
 	short level;		// Header level we are adding
 	short t_level;
@@ -323,7 +345,7 @@ void mmd_outline_add_opml(DString * out, const char * source, token * current, s
 			}
 
 			// Output as XML string
-			mmd_print_source_opml(out, source, start, len);
+			mmd_print_source_itmz(out, source, start, len);
 
 			print_const("\">");
 			scratch->opml_item_closed = 1;
@@ -357,7 +379,7 @@ void mmd_outline_add_opml(DString * out, const char * source, token * current, s
 
 			if (t_level >= level) {
 				// Close out level
-				print_const("</outline>\n");
+				print_const("</topic>\n");
 
 				stack_pop(s);
 				t = stack_peek(s);
@@ -372,14 +394,15 @@ void mmd_outline_add_opml(DString * out, const char * source, token * current, s
 	// Add current level to stack and open
 	if (current->type != DOC_START_TOKEN) {
 		stack_push(s, current);
-		print_const("<outline");
+		print_const("<topic ");
+		print_uuid();
 		scratch->opml_item_closed = 0;
 	}
 }
 
 
 /// Extract header title
-void mmd_export_header_opml(DString * out, const char * source, token * t, scratch_pad * scratch) {
+void mmd_export_header_itmz(DString * out, const char * source, token * t, scratch_pad * scratch) {
 	if (t && t->child) {
 		size_t start = t->start;
 		size_t stop = t->start + t->len;
@@ -419,8 +442,6 @@ void mmd_export_header_opml(DString * out, const char * source, token * t, scrat
 				case MARKER_H4:
 				case MARKER_H5:
 				case MARKER_H6:
-				case MARKER_SETEXT_1:
-				case MARKER_SETEXT_2:
 					walker = walker->prev;
 					break;
 
@@ -431,37 +452,36 @@ void mmd_export_header_opml(DString * out, const char * source, token * t, scrat
 			}
 		}
 
-		mmd_print_source_opml(out, source, start, stop - start);
+		mmd_print_source_itmz(out, source, start, stop - start);
 	}
 }
 
 
-void mmd_export_token_opml(DString * out, const char * source, token * t, scratch_pad * scratch) {
+void mmd_export_token_itmz(DString * out, const char * source, token * t, scratch_pad * scratch) {
 	if (t == NULL) {
 		return;
 	}
 
 	switch (t->type) {
 		case DOC_START_TOKEN:
-			print_const("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<opml version=\"1.0\">\n");
+			print_const("<iThoughts>\n");
 
-			// Export metadata
-			mmd_export_title_opml(out, source, scratch);
-
-			print_const("<body>\n");
+			// Export title
+			mmd_export_title_itmz(out, source, scratch);
 
 			// Check for content before first header
-			mmd_check_preamble_opml(out, t, scratch);
+			mmd_check_preamble_itmz(out, t, scratch);
 
 			// Export body
-			mmd_export_token_tree_opml(out, source, t->child, scratch);
+			mmd_export_token_tree_itmz(out, source, t->child, scratch);
 
 			// Close out any existing outline levels
-			mmd_outline_add_opml(out, source, t, scratch);
+			mmd_outline_add_itmz(out, source, t, scratch);
 
-			mmd_export_metadata_opml(out, source, scratch);
+			mmd_export_metadata_itmz(out, source, scratch);
 
-			print_const("</body>\n</opml>\n");
+			// Close top level topic and document
+			print_const("</topic></iThoughts>\n");
 
 			break;
 
@@ -473,12 +493,12 @@ void mmd_export_token_opml(DString * out, const char * source, token * t, scratc
 		case BLOCK_H6:
 		case BLOCK_SETEXT_1:
 		case BLOCK_SETEXT_2:
-			mmd_outline_add_opml(out, source, t, scratch);
+			mmd_outline_add_itmz(out, source, t, scratch);
 
 			print_const(" text=\"");
-			mmd_export_header_opml(out, source, t, scratch);
+			mmd_export_header_itmz(out, source, t, scratch);
 			trim_trailing_whitespace_d_string(out);
-			print_const("\" _note=\"");
+			print_const("\" note=\"");
 			break;
 
 		default:
@@ -488,7 +508,7 @@ void mmd_export_token_opml(DString * out, const char * source, token * t, scratc
 }
 
 
-void mmd_export_token_tree_opml(DString * out, const char * source, token * t, scratch_pad * scratch) {
+void mmd_export_token_tree_itmz(DString * out, const char * source, token * t, scratch_pad * scratch) {
 
 	// Prevent stack overflow with "dangerous" input causing extreme recursion
 	if (scratch->recurse_depth == kMaxExportRecursiveDepth) {
@@ -501,11 +521,47 @@ void mmd_export_token_tree_opml(DString * out, const char * source, token * t, s
 		if (scratch->skip_token) {
 			scratch->skip_token--;
 		} else {
-			mmd_export_token_opml(out, source, t, scratch);
+			mmd_export_token_itmz(out, source, t, scratch);
 		}
 
 		t = t->next;
 	}
 
 	scratch->recurse_depth--;
+}
+
+
+DString * itmz_style(void) {
+	DString * out = d_string_new("");
+
+	print_const("<style version=\"2\" name=\"\" canvasStyle=\"0\" mapLayout=\"1\" topicHugging=\"1\" layoutDensity=\"0\" radialLayout=\"0\" mapViewStyle=\"0\" level1LinkStyle=\"5\" level1LinkStyleTapered=\"1\" levelNLinkStyle=\"3\" linkThickness=\"2\" autoAlign=\"1\" calloutShape=\"0\" rainbow=\"0\" rainbowStartColor=\"\" rainbowRange=\"0\" rainbowClockwise=\"1\" rainbowAngularDistribution=\"0\" inheritColor=\"1\"  calloutFont=\"HelveticaNeue | Helvetica Neue |  | \" calloutFontSize=\"14\" noteFont=\"HelveticaNeue | Helvetica Neue |  | \" noteFontSize=\"14\"><level n=\"0\" topicShape=\"2\" textFont=\"Helvetica | Helvetica |  | \" textFontSize=\"14\" /><level n=\"1\" topicShape=\"0\" /></style>");
+
+	return out;
+}
+
+
+DString * itmz_create(DString * body, mmd_engine * e, const char * directory) {
+	DString * result = d_string_new("");
+
+	mz_bool status;
+
+	mz_zip_archive zip;
+	zip_new_archive(&zip);
+
+	status = mz_zip_writer_add_mem(&zip, "mapdata.xml", body->str, body->currentStringLength, MZ_BEST_COMPRESSION);
+
+	if (!status) {
+		fprintf(stderr, "Error adding asset to zip.\n");
+	}
+
+	// Finalize zip archive and extract data
+	free(result->str);
+
+	status = mz_zip_writer_finalize_heap_archive(&zip, (void **) & (result->str), (size_t *) & (result->currentStringLength));
+
+	if (!status) {
+		fprintf(stderr, "Error finalizing zip archive.\n");
+	}
+
+	return result;
 }

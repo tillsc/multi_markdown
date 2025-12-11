@@ -115,16 +115,19 @@ void token_pool_free(void) {
 token * token_new(unsigned short type, size_t start, size_t len) {
 
 
-	#ifdef kUseObjectPool
+#ifdef kUseObjectPool
 	token * t = pool_allocate_object(token_pool);
-	#else
+#else
 	token * t = malloc(sizeof(token));
-	#endif
+#endif
 
 	if (t) {
 		t->type = type;
 		t->start = start;
 		t->len = len;
+
+		t->out_start = 0;
+		t->out_len = 0;
 
 		t->next = NULL;
 		t->prev = NULL;
@@ -145,11 +148,11 @@ token * token_new(unsigned short type, size_t start, size_t len) {
 
 /// Duplicate an existing token
 token * token_copy(token * original) {
-	#ifdef kUseObjectPool
+#ifdef kUseObjectPool
 	token * t = pool_allocate_object(token_pool);
-	#else
+#else
 	token * t = malloc(sizeof(token));
-	#endif
+#endif
 
 	if (t) {
 		* t = * original;
@@ -276,9 +279,28 @@ void token_remove_tail(token * head) {
 }
 
 
+/// Fix tail at head of token chain (e.g. after pruning)
+void fix_token_chain_tail(token * t) {
+	if (t) {
+		token * head = t;
+
+		// Find head of chain
+		while (head->prev) {
+			head = head->prev;
+		}
+
+		// Find tail
+		while (t->next) {
+			t = t->next;
+		}
+
+		// Fix tail
+		head->tail = t;
+	}
+}
+
 /// Pop token out of it's chain, connecting head and tail of chain back together.
 /// Token must be freed if it is no longer needed.
-/// \todo: If t is the tail token of a chain, the tail is no longer correct on the start of chain.
 void token_pop_link_from_chain(token * t) {
 	if (t == NULL) {
 		return;
@@ -293,6 +315,8 @@ void token_pop_link_from_chain(token * t) {
 
 	if (prev) {
 		prev->next = next;
+
+		fix_token_chain_tail(prev);
 	}
 
 	if (next) {
@@ -312,6 +336,8 @@ void tokens_prune(token * first, token * last) {
 
 	if (prev != NULL) {
 		prev->next = next;
+
+		fix_token_chain_tail(prev);
 	}
 
 	if (next != NULL) {
@@ -387,9 +413,9 @@ token * token_prune_graft(token * first, token * last, unsigned short container_
 
 /// Free token
 void token_free(token * t) {
-	#ifdef kUseObjectPool
+#ifdef kUseObjectPool
 	return;
-	#else
+#else
 
 	if (t == NULL) {
 		return;
@@ -398,15 +424,15 @@ void token_free(token * t) {
 	token_tree_free(t->child);
 
 	free(t);
-	#endif
+#endif
 }
 
 
 /// Free token chain
 void token_tree_free(token * t) {
-	#ifdef kUseObjectPool
+#ifdef kUseObjectPool
 	return;
-	#else
+#else
 	token * n;
 
 	while (t != NULL) {
@@ -416,7 +442,7 @@ void token_tree_free(token * t) {
 		t = n;
 	}
 
-	#endif
+#endif
 }
 
 
@@ -592,7 +618,7 @@ void token_trim_leading_whitespace(token * t, const char * string) {
 
 
 void token_trim_trailing_whitespace(token * t, const char * string) {
-	while (t->len && char_is_whitespace(string[t->start + t->len - 1])) {
+	while (t->len && char_is_whitespace_or_line_ending(string[t->start + t->len - 1])) {
 		t->len--;
 	}
 }
@@ -606,7 +632,7 @@ void token_trim_whitespace(token * t, const char * string) {
 
 /// Check whether first token in the chain matches the given type.
 /// If so, return and advance the chain.
-token * token_chain_accept(token ** t, short type) {
+token * token_chain_accept(token ** t, unsigned short type) {
 	token * result = NULL;
 
 	if (t && *t && ((*t)->type == type)) {
@@ -639,7 +665,7 @@ token * token_chain_accept_multiple(token ** t, int n, ...) {
 }
 
 
-void token_skip_until_type(token ** t, short type) {
+void token_skip_until_type(token ** t, unsigned short type) {
 	while ((*t) && ((*t)->type != type)) {
 		*t = (*t)->next;
 	}

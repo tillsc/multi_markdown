@@ -56,7 +56,7 @@
 **    YYACTIONTYPE       is the data type used for "action codes" - numbers
 **                       that indicate what to do in response to the next
 **                       token.
-**    OPMLTOKENTYPE     is the data type used for minor type for terminal
+**    ITMZTOKENTYPE     is the data type used for minor type for terminal
 **                       symbols.  Background: A "minor type" is a semantic
 **                       value associated with a terminal or non-terminal
 **                       symbols.  For example, for an "ID" terminal symbol,
@@ -67,14 +67,14 @@
 **                       symbols.
 **    YYMINORTYPE        is the data type used for all minor types.
 **                       This is typically a union of many types, one of
-**                       which is OPMLTOKENTYPE.  The entry in the union
+**                       which is ITMZTOKENTYPE.  The entry in the union
 **                       for terminal symbols is called "yy0".
 **    YYSTACKDEPTH       is the maximum depth of the parser's stack.  If
 **                       zero the stack is dynamically sized using realloc()
-**    OPMLARG_SDECL     A static variable declaration for the %extra_argument
-**    OPMLARG_PDECL     A parameter declaration for the %extra_argument
-**    OPMLARG_STORE     Code to store %extra_argument into yypParser
-**    OPMLARG_FETCH     Code to extract %extra_argument from yypParser
+**    ITMZARG_SDECL     A static variable declaration for the %extra_argument
+**    ITMZARG_PDECL     A parameter declaration for the %extra_argument
+**    ITMZARG_STORE     Code to store %extra_argument into yypParser
+**    ITMZARG_FETCH     Code to extract %extra_argument from yypParser
 **    YYERRORSYMBOL      is the code number of the error symbol.  If not
 **                       defined, then do no error processing.
 **    YYNSTATE           the combined number of states.
@@ -92,30 +92,30 @@
 #endif
 /************* Begin control #defines *****************************************/
 #define YYCODETYPE unsigned char
-#define YYNOCODE 26
+#define YYNOCODE 20
 #define YYACTIONTYPE unsigned char
-#define OPMLTOKENTYPE  token *
+#define ITMZTOKENTYPE  token *
 typedef union {
 	int yyinit;
-	OPMLTOKENTYPE yy0;
+	ITMZTOKENTYPE yy0;
 } YYMINORTYPE;
 #ifndef YYSTACKDEPTH
 	#define YYSTACKDEPTH 100
 #endif
-#define OPMLARG_SDECL  mmd_engine * engine ;
-#define OPMLARG_PDECL , mmd_engine * engine
-#define OPMLARG_FETCH  mmd_engine * engine  = yypParser->engine
-#define OPMLARG_STORE yypParser->engine  = engine
-#define YYNSTATE             19
-#define YYNRULE              19
-#define YY_MAX_SHIFT         18
-#define YY_MIN_SHIFTREDUCE   35
-#define YY_MAX_SHIFTREDUCE   53
-#define YY_MIN_REDUCE        54
-#define YY_MAX_REDUCE        72
-#define YY_ERROR_ACTION      73
-#define YY_ACCEPT_ACTION     74
-#define YY_NO_ACTION         75
+#define ITMZARG_SDECL  mmd_engine * engine ;
+#define ITMZARG_PDECL , mmd_engine * engine
+#define ITMZARG_FETCH  mmd_engine * engine  = yypParser->engine
+#define ITMZARG_STORE yypParser->engine  = engine
+#define YYNSTATE             15
+#define YYNRULE              16
+#define YY_MAX_SHIFT         14
+#define YY_MIN_SHIFTREDUCE   28
+#define YY_MAX_SHIFTREDUCE   43
+#define YY_MIN_REDUCE        44
+#define YY_MAX_REDUCE        59
+#define YY_ERROR_ACTION      60
+#define YY_ACCEPT_ACTION     61
+#define YY_NO_ACTION         62
 /************* End control #defines *******************************************/
 
 /* Define the yytestcase() macro to be a no-op if is not already defined
@@ -187,42 +187,43 @@ typedef union {
 **  yy_default[]       Default action for each state.
 **
 *********** Begin parsing tables **********************************************/
-#define YY_ACTTAB_COUNT (60)
+#define YY_ACTTAB_COUNT (61)
 static const YYACTIONTYPE yy_action[] = {
-	/*     0 */     1,   49,   15,    3,   53,   46,    1,   47,   15,    3,
-	/*    10 */    53,    1,   52,   15,    3,   53,    1,   51,   15,    3,
-	/*    20 */    53,   45,    1,   13,   15,    3,   53,    1,   16,   15,
-	/*    30 */     3,   53,   74,   18,   11,   10,    2,    4,    9,   14,
-	/*    40 */     6,    6,    7,    7,    5,    5,    8,    4,   43,   12,
-	/*    50 */     2,   17,   39,   44,   42,   41,   40,   38,   50,   54,
+	/*     0 */     4,    1,    3,   34,   10,    2,   41,   12,    3,   40,
+	/*    10 */    10,    2,   41,    3,   36,   10,    2,   41,   32,    3,
+	/*    20 */    12,   10,    2,   41,    3,   39,   10,    2,   41,    3,
+	/*    30 */    38,   10,    2,   41,   31,    3,   13,   10,    2,   41,
+	/*    40 */     9,   11,    8,    8,    3,   30,   10,    2,   41,   61,
+	/*    50 */    14,    5,    5,   37,   29,    6,    6,    7,    7,   42,
+	/*    60 */    44,
 };
 static const YYCODETYPE yy_lookahead[] = {
-	/*     0 */    11,   12,   13,   14,   15,   10,   11,   24,   13,   14,
-	/*    10 */    15,   11,   12,   13,   14,   15,   11,   12,   13,   14,
-	/*    20 */    15,   10,   11,   22,   13,   14,   15,   11,   21,   13,
-	/*    30 */    14,   15,   17,   18,   19,    1,    9,    3,   20,   21,
-	/*    40 */    23,   24,   23,   24,   23,   24,    5,    3,    6,    7,
-	/*    50 */     9,   19,    2,    8,    6,    4,    4,    2,   12,    0,
+	/*     0 */     3,    1,    5,   18,    7,    8,    9,   10,    5,    6,
+	/*    10 */     7,    8,    9,    5,    6,    7,    8,    9,    4,    5,
+	/*    20 */    10,    7,    8,    9,    5,    6,    7,    8,    9,    5,
+	/*    30 */     6,    7,    8,    9,    4,    5,   16,    7,    8,    9,
+	/*    40 */    15,   16,   17,   18,    5,    2,    7,    8,    9,   13,
+	/*    50 */    14,   17,   18,    6,    2,   17,   18,   17,   18,   11,
+	/*    60 */     0,
 };
-#define YY_SHIFT_USE_DFLT (60)
-#define YY_SHIFT_COUNT    (18)
-#define YY_SHIFT_MIN      (-11)
-#define YY_SHIFT_MAX      (59)
+#define YY_SHIFT_USE_DFLT (61)
+#define YY_SHIFT_COUNT    (14)
+#define YY_SHIFT_MIN      (-3)
+#define YY_SHIFT_MAX      (60)
 static const signed char yy_shift_ofst[] = {
-	/*     0 */    34,  -11,   -5,   16,   41,    0,    5,   11,   42,   27,
-	/*    10 */    44,   50,   45,   48,   51,   46,   52,   55,   59,
+	/*     0 */     0,   -3,    3,    8,   14,   19,   24,   30,   39,   10,
+	/*    10 */    47,   43,   48,   52,   60,
 };
-#define YY_REDUCE_USE_DFLT (-18)
-#define YY_REDUCE_COUNT (10)
-#define YY_REDUCE_MIN   (-17)
-#define YY_REDUCE_MAX   (32)
+#define YY_REDUCE_USE_DFLT (-16)
+#define YY_REDUCE_COUNT (9)
+#define YY_REDUCE_MIN   (-15)
+#define YY_REDUCE_MAX   (40)
 static const signed char yy_reduce_ofst[] = {
-	/*     0 */    15,   17,   19,   21,   18,  -17,  -17,  -17,    1,    7,
-	/*    10 */    32,
+	/*     0 */    36,   25,   34,   38,   40,  -15,  -15,  -15,  -15,   20,
 };
 static const YYACTIONTYPE yy_default[] = {
-	/*     0 */    73,   73,   73,   73,   73,   73,   73,   73,   73,   73,
-	/*    10 */    73,   56,   73,   73,   73,   73,   73,   55,   73,
+	/*     0 */    60,   59,   60,   60,   60,   60,   60,   60,   49,   59,
+	/*    10 */    60,   60,   60,   60,   60,
 };
 /********** End of lemon-generated parsing tables *****************************/
 
@@ -280,7 +281,7 @@ struct yyParser {
 #ifndef YYNOERRORRECOVERY
 	int yyerrcnt;                 /* Shifts left before out of the error */
 #endif
-	OPMLARG_SDECL                /* A place to hold %extra_argument */
+	ITMZARG_SDECL                /* A place to hold %extra_argument */
 #if YYSTACKDEPTH<=0
 	int yystksz;                  /* Current side of the stack */
 	yyStackEntry * yystack;       /* The parser's stack */
@@ -315,7 +316,7 @@ typedef struct yyParser yyParser;
 ** Outputs:
 ** None.
 */
-void OPMLTrace(FILE * TraceFILE, char * zTracePrompt) {
+void ITMZTrace(FILE * TraceFILE, char * zTracePrompt) {
 	yyTraceFILE = TraceFILE;
 	yyTracePrompt = zTracePrompt;
 
@@ -331,13 +332,11 @@ void OPMLTrace(FILE * TraceFILE, char * zTracePrompt) {
 /* For tracing shifts, the names of all terminals and nonterminals
 ** are required.  The following table supplies these names */
 static const char * const yyTokenName[] = {
-	"$",             "OPML_XML",      "OPML_WSNL",     "OPML_OPML_OPEN",
-	"OPML_OPML_CLOSE",  "OPML_HEAD_OPEN",  "OPML_HEAD_CLOSE",  "OPML_TITLE_OPEN",
-	"OPML_TITLE_CLOSE",  "OPML_BODY_OPEN",  "OPML_BODY_CLOSE",  "OPML_OUTLINE_OPEN",
-	"OPML_OUTLINE_CLOSE",  "OPML_OUTLINE_PREAMBLE",  "OPML_OUTLINE_METADATA",  "OPML_OUTLINE_SELF_CLOSE",
-	"error",         "doc",           "doc_xml",       "doc_opml",
-	"opml_header",   "opml_body",     "opml_title",    "opml_outlines",
-	"opml_outline",
+	"$",             "ITMZ_ITHOUGHTS_OPEN",  "ITMZ_ITHOUGHTS_CLOSE",  "ITMZ_TOPICS_OPEN",
+	"ITMZ_TOPICS_CLOSE",  "ITMZ_TOPIC_OPEN",  "ITMZ_TOPIC_CLOSE",  "ITMZ_TOPIC_PREAMBLE",
+	"ITMZ_TOPIC_METADATA",  "ITMZ_TOPIC_SELF_CLOSE",  "ITMZ_RELATIONSHIPS_OPEN",  "ITMZ_RELATIONSHIPS_CLOSE",
+	"error",         "doc",           "doc_ithoughts",  "itmz_topics_section",
+	"itmz_relationships",  "itmz_topics",   "itmz_topic",
 };
 #endif /* NDEBUG */
 
@@ -345,25 +344,22 @@ static const char * const yyTokenName[] = {
 /* For tracing reduce actions, the names of all rules are required.
 */
 static const char * const yyRuleName[] = {
-	/*   0 */ "doc ::= doc_xml",
-	/*   1 */ "doc_xml ::= OPML_XML doc_opml",
-	/*   2 */ "doc_xml ::= doc_opml",
-	/*   3 */ "doc_xml ::= OPML_XML doc_opml OPML_WSNL",
-	/*   4 */ "doc_xml ::= doc_opml OPML_WSNL",
-	/*   5 */ "doc_opml ::= OPML_OPML_OPEN opml_header opml_body OPML_OPML_CLOSE",
-	/*   6 */ "doc_opml ::= OPML_OPML_OPEN opml_body OPML_OPML_CLOSE",
-	/*   7 */ "opml_header ::= OPML_HEAD_OPEN opml_title OPML_HEAD_CLOSE",
-	/*   8 */ "opml_header ::= OPML_HEAD_OPEN OPML_HEAD_CLOSE",
-	/*   9 */ "opml_title ::= OPML_TITLE_OPEN OPML_TITLE_CLOSE",
-	/*  10 */ "opml_body ::= OPML_BODY_OPEN opml_outlines OPML_BODY_CLOSE",
-	/*  11 */ "opml_body ::= OPML_BODY_OPEN OPML_BODY_CLOSE",
-	/*  12 */ "opml_outlines ::= opml_outlines opml_outline",
-	/*  13 */ "opml_outlines ::= opml_outline",
-	/*  14 */ "opml_outline ::= OPML_OUTLINE_OPEN OPML_OUTLINE_CLOSE",
-	/*  15 */ "opml_outline ::= OPML_OUTLINE_PREAMBLE OPML_OUTLINE_CLOSE",
-	/*  16 */ "opml_outline ::= OPML_OUTLINE_OPEN opml_outlines OPML_OUTLINE_CLOSE",
-	/*  17 */ "opml_outline ::= OPML_OUTLINE_METADATA opml_outlines OPML_OUTLINE_CLOSE",
-	/*  18 */ "opml_outline ::= OPML_OUTLINE_SELF_CLOSE",
+	/*   0 */ "doc ::= doc_ithoughts",
+	/*   1 */ "doc_ithoughts ::= ITMZ_ITHOUGHTS_OPEN itmz_topics_section itmz_relationships ITMZ_ITHOUGHTS_CLOSE",
+	/*   2 */ "doc_ithoughts ::= ITMZ_ITHOUGHTS_OPEN itmz_relationships ITMZ_ITHOUGHTS_CLOSE",
+	/*   3 */ "itmz_topics_section ::= ITMZ_TOPICS_OPEN itmz_topics ITMZ_TOPICS_CLOSE",
+	/*   4 */ "itmz_topics_section ::= ITMZ_TOPICS_OPEN ITMZ_TOPICS_CLOSE",
+	/*   5 */ "itmz_topics_section ::= itmz_topics",
+	/*   6 */ "itmz_topics ::= itmz_topics itmz_topic",
+	/*   7 */ "itmz_topics ::= itmz_topic",
+	/*   8 */ "itmz_topic ::= ITMZ_TOPIC_OPEN ITMZ_TOPIC_CLOSE",
+	/*   9 */ "itmz_topic ::= ITMZ_TOPIC_PREAMBLE ITMZ_TOPIC_CLOSE",
+	/*  10 */ "itmz_topic ::= ITMZ_TOPIC_OPEN itmz_topics ITMZ_TOPIC_CLOSE",
+	/*  11 */ "itmz_topic ::= ITMZ_TOPIC_METADATA itmz_topics ITMZ_TOPIC_CLOSE",
+	/*  12 */ "itmz_topic ::= ITMZ_TOPIC_METADATA ITMZ_TOPIC_CLOSE",
+	/*  13 */ "itmz_topic ::= ITMZ_TOPIC_SELF_CLOSE",
+	/*  14 */ "itmz_relationships ::= ITMZ_RELATIONSHIPS_OPEN ITMZ_RELATIONSHIPS_CLOSE",
+	/*  15 */ "itmz_relationships ::=",
 };
 #endif /* NDEBUG */
 
@@ -410,7 +406,7 @@ static int yyGrowStack(yyParser * p) {
 #endif
 
 /* Datatype of the argument to the memory allocated passed as the
-** second argument to OPMLAlloc() below.  This can be changed by
+** second argument to ITMZAlloc() below.  This can be changed by
 ** putting an appropriate #define in the %include section of the input
 ** grammar.
 */
@@ -428,9 +424,9 @@ static int yyGrowStack(yyParser * p) {
 **
 ** Outputs:
 ** A pointer to a parser.  This pointer is used in subsequent calls
-** to OPML and OPMLFree.
+** to ITMZ and ITMZFree.
 */
-void * OPMLAlloc(void * (*mallocProc)(YYMALLOCARGTYPE)) {
+void * ITMZAlloc(void * (*mallocProc)(YYMALLOCARGTYPE)) {
 	yyParser * pParser;
 	pParser = (yyParser *)(*mallocProc)( (YYMALLOCARGTYPE)sizeof(yyParser) );
 
@@ -472,7 +468,7 @@ static void yy_destructor(
 	YYCODETYPE yymajor,     /* Type code for object to destroy */
 	YYMINORTYPE * yypminor  /* The object to be destroyed */
 ) {
-	OPMLARG_FETCH;
+	ITMZARG_FETCH;
 
 	switch ( yymajor ) {
 		/* Here is inserted the actions which take place when a
@@ -523,7 +519,7 @@ static void yy_pop_parser_stack(yyParser * pParser) {
 ** is defined in a %include section of the input grammar) then it is
 ** assumed that the input pointer is never NULL.
 */
-void OPMLFree(
+void ITMZFree(
 	void * p,                   /* The parser to be deleted */
 	void (*freeProc)(void *)    /* Function used to reclaim memory */
 ) {
@@ -554,7 +550,7 @@ void OPMLFree(
 ** Return the peak depth of the stack for a parser.
 */
 #ifdef YYTRACKMAXSTACKDEPTH
-int OPMLStackPeak(void * p) {
+int ITMZStackPeak(void * p) {
 	yyParser * pParser = (yyParser *)p;
 	return pParser->yyhwm;
 }
@@ -674,7 +670,7 @@ static int yy_find_reduce_action(
 ** The following routine is called if the stack overflows.
 */
 static void yyStackOverflow(yyParser * yypParser) {
-	OPMLARG_FETCH;
+	ITMZARG_FETCH;
 	yypParser->yytos--;
 #ifndef NDEBUG
 
@@ -692,7 +688,7 @@ static void yyStackOverflow(yyParser * yypParser) {
 	** stack every overflows */
 	/******** Begin %stack_overflow code ******************************************/
 	/******** End %stack_overflow code ********************************************/
-	OPMLARG_STORE; /* Suppress warning about unused %extra_argument var */
+	ITMZARG_STORE; /* Suppress warning about unused %extra_argument var */
 }
 
 /*
@@ -722,7 +718,7 @@ static void yy_shift(
 	yyParser * yypParser,         /* The parser to be shifted */
 	int yyNewState,               /* The new state to shift in */
 	int yyMajor,                  /* The major token to shift in */
-	OPMLTOKENTYPE yyMinor        /* The minor token to shift in */
+	ITMZTOKENTYPE yyMinor        /* The minor token to shift in */
 ) {
 	yyStackEntry * yytos;
 	yypParser->yytos++;
@@ -770,25 +766,22 @@ static const struct {
 	YYCODETYPE lhs;         /* Symbol on the left-hand side of the rule */
 	unsigned char nrhs;     /* Number of right-hand side symbols in the rule */
 } yyRuleInfo[] = {
+	{ 13, 1 },
+	{ 14, 4 },
+	{ 14, 3 },
+	{ 15, 3 },
+	{ 15, 2 },
+	{ 15, 1 },
+	{ 17, 2 },
 	{ 17, 1 },
 	{ 18, 2 },
-	{ 18, 1 },
+	{ 18, 2 },
+	{ 18, 3 },
 	{ 18, 3 },
 	{ 18, 2 },
-	{ 19, 4 },
-	{ 19, 3 },
-	{ 20, 3 },
-	{ 20, 2 },
-	{ 22, 2 },
-	{ 21, 3 },
-	{ 21, 2 },
-	{ 23, 2 },
-	{ 23, 1 },
-	{ 24, 2 },
-	{ 24, 2 },
-	{ 24, 3 },
-	{ 24, 3 },
-	{ 24, 1 },
+	{ 18, 1 },
+	{ 16, 2 },
+	{ 16, 0 },
 };
 
 static void yy_accept(yyParser *); /* Forward Declaration */
@@ -805,7 +798,7 @@ static void yy_reduce(
 	int yyact;                      /* The next action */
 	yyStackEntry * yymsp;           /* The top of the parser's stack */
 	int yysize;                     /* Amount to pop the stack */
-	OPMLARG_FETCH;
+	ITMZARG_FETCH;
 	yymsp = yypParser->yytos;
 #ifndef NDEBUG
 
@@ -860,31 +853,28 @@ static void yy_reduce(
 		**     break;
 		*/
 		/********** Begin reduce actions **********************************************/
-		case 0: { /* doc ::= doc_xml */
+		case 0: { /* doc ::= doc_ithoughts */
 			engine->root = yymsp[0].minor.yy0;
 		}
 		break;
 
 		default:
-			/* (1) doc_xml ::= OPML_XML doc_opml */
+			/* (1) doc_ithoughts ::= ITMZ_ITHOUGHTS_OPEN itmz_topics_section itmz_relationships ITMZ_ITHOUGHTS_CLOSE */
 			yytestcase(yyruleno == 1);
-			/* (2) doc_xml ::= doc_opml */ yytestcase(yyruleno == 2);
-			/* (3) doc_xml ::= OPML_XML doc_opml OPML_WSNL */ yytestcase(yyruleno == 3);
-			/* (4) doc_xml ::= doc_opml OPML_WSNL */ yytestcase(yyruleno == 4);
-			/* (5) doc_opml ::= OPML_OPML_OPEN opml_header opml_body OPML_OPML_CLOSE */ yytestcase(yyruleno == 5);
-			/* (6) doc_opml ::= OPML_OPML_OPEN opml_body OPML_OPML_CLOSE */ yytestcase(yyruleno == 6);
-			/* (7) opml_header ::= OPML_HEAD_OPEN opml_title OPML_HEAD_CLOSE */ yytestcase(yyruleno == 7);
-			/* (8) opml_header ::= OPML_HEAD_OPEN OPML_HEAD_CLOSE */ yytestcase(yyruleno == 8);
-			/* (9) opml_title ::= OPML_TITLE_OPEN OPML_TITLE_CLOSE */ yytestcase(yyruleno == 9);
-			/* (10) opml_body ::= OPML_BODY_OPEN opml_outlines OPML_BODY_CLOSE */ yytestcase(yyruleno == 10);
-			/* (11) opml_body ::= OPML_BODY_OPEN OPML_BODY_CLOSE */ yytestcase(yyruleno == 11);
-			/* (12) opml_outlines ::= opml_outlines opml_outline */ yytestcase(yyruleno == 12);
-			/* (13) opml_outlines ::= opml_outline (OPTIMIZED OUT) */ assert(yyruleno != 13);
-			/* (14) opml_outline ::= OPML_OUTLINE_OPEN OPML_OUTLINE_CLOSE */ yytestcase(yyruleno == 14);
-			/* (15) opml_outline ::= OPML_OUTLINE_PREAMBLE OPML_OUTLINE_CLOSE */ yytestcase(yyruleno == 15);
-			/* (16) opml_outline ::= OPML_OUTLINE_OPEN opml_outlines OPML_OUTLINE_CLOSE */ yytestcase(yyruleno == 16);
-			/* (17) opml_outline ::= OPML_OUTLINE_METADATA opml_outlines OPML_OUTLINE_CLOSE */ yytestcase(yyruleno == 17);
-			/* (18) opml_outline ::= OPML_OUTLINE_SELF_CLOSE */ yytestcase(yyruleno == 18);
+			/* (2) doc_ithoughts ::= ITMZ_ITHOUGHTS_OPEN itmz_relationships ITMZ_ITHOUGHTS_CLOSE */ yytestcase(yyruleno == 2);
+			/* (3) itmz_topics_section ::= ITMZ_TOPICS_OPEN itmz_topics ITMZ_TOPICS_CLOSE */ yytestcase(yyruleno == 3);
+			/* (4) itmz_topics_section ::= ITMZ_TOPICS_OPEN ITMZ_TOPICS_CLOSE */ yytestcase(yyruleno == 4);
+			/* (5) itmz_topics_section ::= itmz_topics */ yytestcase(yyruleno == 5);
+			/* (6) itmz_topics ::= itmz_topics itmz_topic */ yytestcase(yyruleno == 6);
+			/* (7) itmz_topics ::= itmz_topic (OPTIMIZED OUT) */ assert(yyruleno != 7);
+			/* (8) itmz_topic ::= ITMZ_TOPIC_OPEN ITMZ_TOPIC_CLOSE */ yytestcase(yyruleno == 8);
+			/* (9) itmz_topic ::= ITMZ_TOPIC_PREAMBLE ITMZ_TOPIC_CLOSE */ yytestcase(yyruleno == 9);
+			/* (10) itmz_topic ::= ITMZ_TOPIC_OPEN itmz_topics ITMZ_TOPIC_CLOSE */ yytestcase(yyruleno == 10);
+			/* (11) itmz_topic ::= ITMZ_TOPIC_METADATA itmz_topics ITMZ_TOPIC_CLOSE */ yytestcase(yyruleno == 11);
+			/* (12) itmz_topic ::= ITMZ_TOPIC_METADATA ITMZ_TOPIC_CLOSE */ yytestcase(yyruleno == 12);
+			/* (13) itmz_topic ::= ITMZ_TOPIC_SELF_CLOSE */ yytestcase(yyruleno == 13);
+			/* (14) itmz_relationships ::= ITMZ_RELATIONSHIPS_OPEN ITMZ_RELATIONSHIPS_CLOSE */ yytestcase(yyruleno == 14);
+			/* (15) itmz_relationships ::= */ yytestcase(yyruleno == 15);
 			break;
 			/********** End reduce actions ************************************************/
 	};
@@ -921,7 +911,7 @@ static void yy_reduce(
 static void yy_parse_failed(
 	yyParser * yypParser          /* The parser */
 ) {
-	OPMLARG_FETCH;
+	ITMZARG_FETCH;
 #ifndef NDEBUG
 
 	if ( yyTraceFILE ) {
@@ -940,7 +930,7 @@ static void yy_parse_failed(
 
 	fprintf(stderr, "Parser failed to successfully parse.\n");
 	/************ End %parse_failure code *****************************************/
-	OPMLARG_STORE; /* Suppress warning about unused %extra_argument variable */
+	ITMZARG_STORE; /* Suppress warning about unused %extra_argument variable */
 }
 #endif /* YYNOERRORRECOVERY */
 
@@ -950,9 +940,9 @@ static void yy_parse_failed(
 static void yy_syntax_error(
 	yyParser * yypParser,          /* The parser */
 	int yymajor,                   /* The major type of the error token */
-	OPMLTOKENTYPE yyminor         /* The minor type of the error token */
+	ITMZTOKENTYPE yyminor         /* The minor type of the error token */
 ) {
-	OPMLARG_FETCH;
+	ITMZARG_FETCH;
 #define TOKEN yyminor
 	/************ Begin %syntax_error code ****************************************/
 
@@ -971,7 +961,7 @@ static void yy_syntax_error(
 
 #endif
 	/************ End %syntax_error code ******************************************/
-	OPMLARG_STORE; /* Suppress warning about unused %extra_argument variable */
+	ITMZARG_STORE; /* Suppress warning about unused %extra_argument variable */
 }
 
 /*
@@ -980,7 +970,7 @@ static void yy_syntax_error(
 static void yy_accept(
 	yyParser * yypParser          /* The parser */
 ) {
-	OPMLARG_FETCH;
+	ITMZARG_FETCH;
 #ifndef NDEBUG
 
 	if ( yyTraceFILE ) {
@@ -998,12 +988,12 @@ static void yy_accept(
 
 //	printf("parsing completed successfully!\n");
 	/*********** End %parse_accept code *******************************************/
-	OPMLARG_STORE; /* Suppress warning about unused %extra_argument variable */
+	ITMZARG_STORE; /* Suppress warning about unused %extra_argument variable */
 }
 
 /* The main parser program.
 ** The first argument is a pointer to a structure obtained from
-** "OPMLAlloc" which describes the current state of the parser.
+** "ITMZAlloc" which describes the current state of the parser.
 ** The second argument is the major token number.  The third is
 ** the minor token.  The fourth optional argument is whatever the
 ** user wants (and specified in the grammar) and is available for
@@ -1020,11 +1010,11 @@ static void yy_accept(
 ** Outputs:
 ** None.
 */
-void OPML(
+void ITMZ(
 	void * yyp,                  /* The parser */
 	int yymajor,                 /* The major token code number */
-	OPMLTOKENTYPE yyminor       /* The value for the token */
-	OPMLARG_PDECL               /* Optional %extra_argument parameter */
+	ITMZTOKENTYPE yyminor       /* The value for the token */
+	ITMZARG_PDECL               /* Optional %extra_argument parameter */
 ) {
 	YYMINORTYPE yyminorunion;
 	unsigned int yyact;   /* The parser action. */
@@ -1041,7 +1031,7 @@ void OPML(
 #if !defined(YYERRORSYMBOL) && !defined(YYNOERRORRECOVERY)
 	yyendofinput = (yymajor == 0);
 #endif
-	OPMLARG_STORE;
+	ITMZARG_STORE;
 
 #ifndef NDEBUG
 

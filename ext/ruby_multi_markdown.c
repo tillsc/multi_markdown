@@ -5,18 +5,6 @@
 #include "mmd.h"
 #include "d_string.h"
 
-// Tries to convert a C string into an encoded ruby String
-static VALUE encoded_str_new2(char *str, char *encoding) {
-  VALUE result = rb_str_new2(str);
-
-  int enc = rb_enc_find_index(encoding);
-  if (enc > 0) {
-    rb_enc_associate_index(result, enc);
-  }
-
-  return result;
-}
-
 static VALUE rb_cMultiMarkdown;
 
 static int get_exts(VALUE self) {
@@ -70,11 +58,11 @@ static void free_engine_manager(engine_manager* manager) {
   free(manager);
 }
 
-static VALUE rb_multimarkdown_allocate(VALUE class) {
+static VALUE rb_multimarkdown_allocate(VALUE klass) {
   engine_manager *manager = malloc(sizeof(engine_manager));
   manager->mmd_engine = NULL;
 
-  return Data_Wrap_Struct(class, NULL, free_engine_manager, manager);
+  return Data_Wrap_Struct(klass, NULL, free_engine_manager, manager);
 }
 
 static VALUE rb_multimarkdown_start_engine(VALUE self, VALUE text) {
@@ -110,6 +98,9 @@ static VALUE rb_multimarkdown_set_language(VALUE self, VALUE language) {
   else if (rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("fr")) == Qtrue || rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("french")) == Qtrue) {
     lang = FRENCH;
   }
+  else if (rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("sp")) == Qtrue || rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("spanish")) == Qtrue) {
+    lang = SPANISH;
+  }
   else if (rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("sv")) == Qtrue || rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("swedish")) == Qtrue) {
     lang = SWEDISH;
   }
@@ -121,7 +112,7 @@ static VALUE rb_multimarkdown_set_language(VALUE self, VALUE language) {
 
 static VALUE rb_multimarkdown_to_html(VALUE self) {
   char *html = mmd_engine_convert(get_mmd_engine(self), FORMAT_HTML);
-  VALUE result = encoded_str_new2(html, "UTF-8");
+  VALUE result = rb_utf8_str_new_cstr(html);
   free(html);
 
   return result;
@@ -129,7 +120,7 @@ static VALUE rb_multimarkdown_to_html(VALUE self) {
 
 static VALUE rb_multimarkdown_to_latex(VALUE self) {
   char *latex = mmd_engine_convert(get_mmd_engine(self), FORMAT_LATEX);
-  VALUE result = encoded_str_new2(latex, "UTF-8");
+  VALUE result = rb_utf8_str_new_cstr(latex);
   free(latex);
 
   return result;
@@ -137,7 +128,7 @@ static VALUE rb_multimarkdown_to_latex(VALUE self) {
 
 static VALUE rb_multimarkdown_extract_metadata_keys(VALUE self) {
   char *metadata_keys = mmd_engine_metadata_keys(get_mmd_engine(self));
-  VALUE str = encoded_str_new2(metadata_keys, "UTF-8");
+  VALUE str = rb_utf8_str_new_cstr(metadata_keys);
   free(metadata_keys);
 
   return rb_funcall(str, rb_intern("split"), 1, rb_str_new2("\n"));
@@ -148,7 +139,7 @@ static VALUE rb_multimarkdown_extract_metadata_value(VALUE self, VALUE key) {
   char *pkey = StringValuePtr(key);
 
   char *metadata = mmd_engine_metavalue_for_key(get_mmd_engine(self), pkey);
-  VALUE result = encoded_str_new2(metadata, "UTF-8");
+  VALUE result = rb_utf8_str_new_cstr(metadata);
 
   return result;
 }

@@ -2,9 +2,9 @@
 
 	MultiMarkdown -- Lightweight markup processor to produce HTML, LaTeX, and more.
 
-	@file zip.h
+	@file xml.h
 
-	@brief
+	@brief Utilities to help parse XML files
 
 
 	@author	Fletcher T. Penney
@@ -14,7 +14,7 @@
 
 /*
 
-	Copyright © 2016 - 2017 Fletcher T. Penney.
+	Copyright © 2016 - 2019 Fletcher T. Penney.
 
 
 	The `MultiMarkdown 6` project is released under the MIT License..
@@ -102,25 +102,33 @@
 */
 
 
-#ifndef ZIP_MULTIMARKDOWN_H
-#define ZIP_MULTIMARKDOWN_H
+#ifndef XML_MULTIMARKDOWN_H
+#define XML_MULTIMARKDOWN_H
 
-#include "miniz.h"
+/// skip through whitespace
+size_t xml_scan_wsnl(const char * c);
 
-// Create new zip archive
-void zip_new_archive(mz_zip_archive * pZip);
+/// scan generic attribute (including quoted value if present)
+size_t xml_scan_attribute_name(const char * c);
 
-// Unzip archive to specified file path
-mz_bool unzip_archive_to_path(mz_zip_archive * pZip, const char * path);
+/// scan until start of value, if present
+size_t xml_scan_until_value(const char * c);
 
-// Unzip archive (as plain binary data) to specified file path
-mz_bool unzip_data_to_path(const void * data, size_t size, const char * path);
+/// scan value
+size_t xml_scan_value(const char * c);
 
-// Extract single file from archive
-mz_bool unzip_file_from_archive(mz_zip_archive * pZip, const char * filename, DString * destination);
+/// Does the string include encoded newline?
+size_t xml_scan_encoded_newline(const char * c, size_t len);
 
-// Extract single file from archive
-mz_bool unzip_file_from_data(const void * data, size_t size, const char * filename, DString * file);
 
+/// Decode XML encoded text and print to DString
+void print_xml_as_text(DString * out, const char * source, size_t start, size_t len);
+
+/// Parse XML text for attribute and value
+size_t xml_extract_attribute(const char * source, size_t start, char ** attr, char ** value);
+
+
+/// Extract attribute with specified name
+char * xml_extract_named_attribute(const char * source, size_t start, const char * name);
 
 #endif

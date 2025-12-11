@@ -4,16 +4,18 @@ LIBDIR      = RbConfig::CONFIG['libdir']
 INCLUDEDIR  = RbConfig::CONFIG['includedir']
 
 if RbConfig::CONFIG['CC'] == 'clang' || RbConfig::CONFIG['CC_VERSION_MESSAGE'].to_s.include?('clang')
-  $CFLAGS="#{$CFLAGS} -fbracket-depth=512 -DNDEBUG=1"
-  $CXXFLAGS="#{$CXXFLAGS} -fbracket-depth=512 -DNDEBUG=1"
+  $CFLAGS="#{$CFLAGS} -fbracket-depth=512"
+  $CXXFLAGS="#{$CXXFLAGS} -fbracket-depth=512"
 else
-  $CFLAGS="#{$CFLAGS} -std=c99 -DNDEBUG=1"
-  $CXXFLAGS="#{$CXXFLAGS} -std=c99 -DNDEBUG=1"
+  $CFLAGS="#{$CFLAGS} -std=c99"
+  $CXXFLAGS="#{$CXXFLAGS} -std=c99"
 end
+
+$CFLAGS  << '  -DNDEBUG=1 -DDISABLE_OBJECT_POOL'
+$CXXFLAGS << '  -DNDEBUG=1 -DDISABLE_OBJECT_POOL'
 
 HEADER_DIRS = [
   File.expand_path('../mmd', __FILE__),
-  File.expand_path('../mmd/include', __FILE__),
   INCLUDEDIR,
   '/usr/include'
 ]

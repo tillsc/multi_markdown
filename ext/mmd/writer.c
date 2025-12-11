@@ -64,6 +64,7 @@
 #include "char.h"
 #include "d_string.h"
 #include "html.h"
+#include "itmz.h"
 #include "i18n.h"
 #include "latex.h"
 #include "memoir.h"
@@ -72,6 +73,7 @@
 #include "opml.h"
 #include "parser.h"
 #include "scanners.h"
+#include "stack.h"
 #include "token.h"
 #include "uuid.h"
 #include "writer.h"
@@ -100,9 +102,9 @@ static char * my_strndup(const char * source, size_t n) {
 	char * result;
 	const char * test = source;
 
-	// strlen is too slow is strlen(source) >> n
+	// strlen is too slow if strlen(source) >> n
 	for (len = 0; len < n; ++len) {
-		if (test == '\0') {
+		if (*test == '\0') {
 			break;
 		}
 
@@ -167,6 +169,14 @@ scratch_pad * scratch_pad_new(mmd_engine * e, short format) {
 		} else {
 			p->random_seed_base = 0;
 		}
+
+		if (e->extensions & EXT_RANDOM_LABELS) {
+			p->random_seed_base_labels = rand() % 32000;
+		} else {
+			p->random_seed_base_labels = 0;
+		}
+
+		p->label_counter = 0;
 
 		// Store links in a hash for rapid retrieval when exporting
 		p->link_hash = NULL;
@@ -248,6 +258,8 @@ scratch_pad * scratch_pad_new(mmd_engine * e, short format) {
 		p->asset_hash = NULL;
 		p->store_assets = 0;
 		p->remember_assets = 0;
+
+		p->critic_stack = e->critic_stack;
 	}
 
 	return p;
@@ -358,10 +370,12 @@ void print_token_raw(DString * out, const char * source, token * t) {
 			case STRONG_START:
 			case STRONG_STOP:
 			case TEXT_EMPTY:
+			case MARKER_BLOCKQUOTE:
 				break;
 
 			case PAIR_EMPH:
 			case PAIR_STRONG:
+			case BLOCK_HTML:
 				print_token_tree_raw(out, source, t->child);
 				break;
 
@@ -451,14 +465,40 @@ char * label_from_token(const char * source, token * t) {
 }
 
 
-char * label_from_header(const char * source, token * t) {
+char * label_from_header(const char * source, token * t, scratch_pad * scratch) {
 	char * result;
+	short temp_short;
+
 	token * temp_token = manual_label_from_header(t, source);
 
 	if (temp_token) {
 		result = label_from_token(source, temp_token);
 	} else {
-		result = label_from_token(source, t);
+		if (scratch->extensions & EXT_RANDOM_LABELS) {
+			srand(scratch->random_seed_base_labels + scratch->label_counter);
+			temp_short = rand() % 32000 + 1;
+			result = malloc(sizeof(char) * 6);
+			sprintf(result, "%d", temp_short);
+
+			scratch->label_counter++;
+		} else {
+			temp_token = token_new(t->type, t->start, t->len);
+
+			if (t->child && t->child->tail) {
+				switch (t->child->tail->type) {
+					case MARKER_SETEXT_1:
+					case MARKER_SETEXT_2:
+						temp_token->len = t->child->tail->start - t->start;
+						break;
+
+					default:
+						break;
+				}
+			}
+
+			result = label_from_token(source, temp_token);
+			token_free(temp_token);
+		}
 	}
 
 	return result;
@@ -466,7 +506,7 @@ char * label_from_header(const char * source, token * t) {
 
 
 /// Clean up whitespace in string for standardization
-char * clean_string(const char * str, bool lowercase) {
+char * clean_string(const char * str, bool lowercase, bool url_clean) {
 	if (str == NULL) {
 		return NULL;
 	}
@@ -478,17 +518,19 @@ char * clean_string(const char * str, bool lowercase) {
 	while (*str != '\0') {
 		switch (*str) {
 			case '\\':
-				switch (*(str + 1)) {
-					case '\n':
-					case '\r':
-						d_string_append_c(out, '\n');
-						block_whitespace = true;
-						break;
+				if (!url_clean) {
+					switch (*(str + 1)) {
+						case '\n':
+						case '\r':
+							d_string_append_c(out, '\n');
+							block_whitespace = true;
+							break;
 
-					default:
-						d_string_append_c(out, '\\');
-						block_whitespace = false;
-						break;
+						default:
+							d_string_append_c(out, '\\');
+							block_whitespace = false;
+							break;
+					}
 				}
 
 				break;
@@ -502,6 +544,16 @@ char * clean_string(const char * str, bool lowercase) {
 					block_whitespace = true;
 				}
 
+				break;
+
+			case '&':
+				if (url_clean) {
+					if (strncmp(str, "&amp;", 5) == 0) {
+						str += 4;
+					}
+				}
+
+				d_string_append_c(out, '&');
 				break;
 
 			default:
@@ -540,7 +592,7 @@ char * clean_string_from_range(const char * source, size_t start, size_t len, bo
 
 	d_string_append_c_array(raw, &source[start], len);
 
-	clean = clean_string(raw->str, lowercase);
+	clean = clean_string(raw->str, lowercase, false);
 
 	d_string_free(raw, true);
 
@@ -556,7 +608,7 @@ char * clean_string_from_token(const char * source, token * t, bool lowercase) {
 char * clean_inside_pair(const char * source, token * t, bool lowercase) {
 	char * text = text_inside_pair(source, t);
 
-	char * clean = clean_string(text, lowercase);
+	char * clean = clean_string(text, lowercase, false);
 
 	free(text);
 
@@ -616,10 +668,10 @@ attr * parse_attributes(char * source) {
 			a->next = attr_new(key, value);
 			a = a->next;
 		} else {
-			#ifndef __clang_analyzer__
+#ifndef __clang_analyzer__
 			a = attr_new(key, value);
 			attributes = a;
-			#endif
+#endif
 		}
 
 		free(value);	// We stored a modified copy
@@ -643,7 +695,7 @@ link * link_new(const char * source, token * label, char * url, char * title, ch
 			l->label_text = NULL;
 		}
 
-		l->url = clean_string(url, false);
+		l->url = clean_string(url, false, true);
 		l->title = (title == NULL) ? NULL : my_strdup(title);
 		l->attributes = (attributes == NULL) ? NULL : parse_attributes(attributes);
 
@@ -713,7 +765,7 @@ link * retrieve_link(scratch_pad * scratch, const char * key) {
 		return l;
 	}
 
-	char * clean = clean_string(key, true);
+	char * clean = clean_string(key, true, false);
 
 	HASH_FIND_STR(scratch->link_hash, clean, l);
 
@@ -839,24 +891,44 @@ void store_abbreviation(scratch_pad * scratch, footnote * f) {
 
 
 void link_free(link * l) {
-	free(l->label_text);
-	free(l->clean_text);
-	free(l->url);
-	free(l->title);
-//	free(l->id);
+	if (l) {
+		free(l->label_text);
+		free(l->clean_text);
+		free(l->url);
+		free(l->title);
+		//    free(l->id);
 
-	attr * a = l->attributes;
-	attr * b;
+		attr * a = l->attributes;
+		attr * b;
 
-	while (a) {
-		b = a->next;
-		free(a->key);
-		free(a->value);
-		free(a);
-		a = b;
+		while (a) {
+			b = a->next;
+			free(a->key);
+			free(a->value);
+			free(a);
+			a = b;
+		}
+
+		free(l);
 	}
+}
 
-	free(l);
+
+/// Fix single whitespace characters
+void whitespace_fix(token * t, const char * source) {
+	while (t) {
+		if ((t->type == TEXT_PLAIN) && (t->len == 1)) {
+			if (source[t->start] == ' ') {
+				t->type = NON_INDENT_SPACE;
+			}
+		}
+
+		if (t->child) {
+			whitespace_fix(t->child, source);
+		}
+
+		t = t->next;
+	}
 }
 
 
@@ -867,7 +939,7 @@ void whitespace_accept(token ** remainder) {
 
 /// Find link based on label
 link * extract_link_from_stack(scratch_pad * scratch, const char * target) {
-	char * key = clean_string(target, true);
+	char * key = clean_string(target, true, false);
 
 	link * temp = NULL;
 
@@ -954,7 +1026,7 @@ char * destination_accept(const char * source, token ** remainder, bool validate
 	}
 
 	// Is this a valid URL?
-	clean = clean_string(url, false);
+	clean = clean_string(url, false, true);
 
 	if (validate && !validate_url(clean)) {
 		free(clean);
@@ -992,7 +1064,7 @@ char * url_accept(const char * source, size_t start, size_t max_len, size_t * en
 
 		url = my_strndup(&source[start], scan_len);
 
-		clean = clean_string(url, false);
+		clean = clean_string(url, false, true);
 
 		if (validate && !validate_url(clean)) {
 			free(clean);
@@ -1130,11 +1202,11 @@ footnote * footnote_new(const char * source, token * label, token * content, boo
 void footnote_free(footnote * f) {
 	if (f) {
 		if (f->free_para) {
-			#ifdef kUseObjectPool
+#ifdef kUseObjectPool
 			// Nothing to do here
-			#else
+#else
 			free(f->content);
-			#endif
+#endif
 		}
 
 		free(f->clean_text);
@@ -1167,22 +1239,24 @@ void meta_set_value(meta * m, const char * value) {
 			free(m->value);
 		}
 
-		m->value = clean_string(value, false);
+		m->value = clean_string(value, false, false);
 	}
 }
 
 
 void meta_free(meta * m) {
-	free(m->key);
-	free(m->value);
+	if (m) {
+		free(m->key);
+		free(m->value);
 
-	free(m);
+		free(m);
+	}
 }
 
 
 /// Find metadata based on key
 meta * extract_meta_from_stack(scratch_pad * scratch, const char * target) {
-	char * key = clean_string(target, true);
+	char * key = clean_string(target, true, false);
 
 	meta * temp = NULL;
 
@@ -1293,6 +1367,7 @@ bool definition_extract(mmd_engine * e, token ** remainder) {
 			}
 
 			// Skip space
+			whitespace_fix(*remainder, e->dstr->str);
 			whitespace_accept(remainder);
 
 			// Grab destination
@@ -1408,14 +1483,15 @@ void process_definition_block(mmd_engine * e, token * block) {
 					if (f) {
 						free(f->label_text);
 						f->label_text = f->clean_text;
-					}
 
-					if (f->content->child &&
-							f->content->child->next &&
-							f->content->child->next->next) {
-						f->clean_text = clean_string_from_range(e->dstr->str, f->content->child->next->next->start, block->start + block->len - f->content->child->next->next->start, false);
-					} else {
-						f->clean_text = NULL;
+						if (f->content &&
+								f->content->child &&
+								f->content->child->next &&
+								f->content->child->next->next) {
+							f->clean_text = clean_string_from_range(e->dstr->str, f->content->child->next->next->start, block->start + block->len - f->content->child->next->next->start, false);
+						} else {
+							f->clean_text = NULL;
+						}
 					}
 
 					stack_push(e->abbreviation_stack, f);
@@ -1502,10 +1578,17 @@ token * manual_label_from_header(token * h, const char * source) {
 			case MARKER_H4:
 			case MARKER_H5:
 			case MARKER_H6:
+			case MARKER_SETEXT_1:
+			case MARKER_SETEXT_2:
 				walker = walker->prev;
 				break;
 
 			case TEXT_PLAIN:
+				if (walker->len == 0) {
+					walker = walker->prev;
+					break;
+				}
+
 				if (walker->len == 1) {
 					if (source[walker->start] == ' ') {
 						walker = walker->prev;
@@ -1666,6 +1749,9 @@ void process_metadata_stack(mmd_engine * e, scratch_pad * scratch) {
 			} else if (strcmp(temp_char, "fr") == 0) {
 				scratch->language = LC_FR;
 				scratch->quotes_lang = FRENCH;
+			} else if (strcmp(temp_char, "he") == 0) {
+				scratch->language = LC_HE;
+				scratch->quotes_lang = ENGLISH;
 			} else if (strcmp(temp_char, "nl") == 0) {
 				scratch->language = LC_NL;
 				scratch->quotes_lang = DUTCH;
@@ -1899,6 +1985,10 @@ void mmd_engine_export_token_tree(DString * out, mmd_engine * e, short format) {
 
 			break;
 
+		case FORMAT_HTML_WITH_ASSETS:
+			scratch->remember_assets = true;
+			scratch->output_format = FORMAT_HTML;
+
 		case FORMAT_HTML:
 			if (scratch->extensions & EXT_COMPLETE) {
 				mmd_start_complete_html(out, e->dstr->str, scratch);
@@ -1957,10 +2047,17 @@ void mmd_engine_export_token_tree(DString * out, mmd_engine * e, short format) {
 		case FORMAT_OPML:
 			mmd_export_token_tree_opml(out, e->dstr->str, e->root, scratch);
 			break;
+
+		case FORMAT_ITMZ:
+			mmd_export_token_tree_itmz(out, e->dstr->str, e->root, scratch);
+			break;
 	}
 
 	// Preserve asset_hash for possible use in export
 	e->asset_hash = scratch->asset_hash;
+
+	// Preserve random label seed
+	e->random_seed_base_labels = scratch->random_seed_base_labels;
 
 	scratch_pad_free(scratch);
 }
@@ -2112,7 +2209,7 @@ void mark_abbreviation_as_used(scratch_pad * scratch, footnote * c) {
 
 
 size_t extract_citation_from_stack(scratch_pad * scratch, const char * target) {
-	char * key = clean_string(target, true);
+	char * key = clean_string(target, true, false);
 
 	fn_holder * h;
 
@@ -2142,7 +2239,7 @@ size_t extract_citation_from_stack(scratch_pad * scratch, const char * target) {
 
 
 size_t extract_footnote_from_stack(scratch_pad * scratch, const char * target) {
-	char * key = clean_string(target, true);
+	char * key = clean_string(target, true, false);
 
 	fn_holder * h;
 
@@ -2172,7 +2269,7 @@ size_t extract_footnote_from_stack(scratch_pad * scratch, const char * target) {
 
 
 size_t extract_abbreviation_from_stack(scratch_pad * scratch, const char * target) {
-	char * key = clean_string(target, false);
+	char * key = clean_string(target, false, false);
 
 	fn_holder * h;
 
@@ -2202,7 +2299,7 @@ size_t extract_abbreviation_from_stack(scratch_pad * scratch, const char * targe
 
 
 size_t extract_glossary_from_stack(scratch_pad * scratch, const char * target) {
-	char * key = clean_string(target, false);
+	char * key = clean_string(target, false, false);
 
 	fn_holder * h;
 
@@ -2494,7 +2591,6 @@ void strip_leading_whitespace(token * chain, const char * source) {
 				chain->type = TEXT_EMPTY;
 
 			case TEXT_EMPTY:
-				chain = chain->next;
 				break;
 
 			case TEXT_PLAIN:
@@ -2562,6 +2658,10 @@ bool table_has_caption(token * t) {
 /// or
 /// ```` perl
 char * get_fence_language_specifier(token * fence, const char * source) {
+	if (fence == NULL) {
+		return NULL;
+	}
+
 	char * result = NULL;
 	size_t start = fence->start + fence->len;
 	size_t len = 0;
@@ -2609,6 +2709,67 @@ short raw_level_for_header(token * header) {
 }
 
 
+void header_clean_trailing_whitespace(token * header, const char * source) {
+	token * walker = header->tail;
+	bool done = false;
+
+	while (!done && walker) {
+		switch (walker->type) {
+			case TEXT_PLAIN:
+				token_trim_trailing_whitespace(walker, source);
+
+				if (walker->len) {
+					done = true;
+				}
+
+				break;
+
+			case NON_INDENT_SPACE:
+			case INDENT_SPACE:
+			case INDENT_TAB:
+				walker->type = TEXT_PLAIN;
+
+			case TEXT_NL:
+			case TEXT_NL_SP:
+			case TEXT_LINEBREAK:
+			case TEXT_LINEBREAK_SP:
+				token_trim_trailing_whitespace(walker, source);
+				break;
+
+			case MARKER_H1:
+			case MARKER_H2:
+			case MARKER_H3:
+			case MARKER_H4:
+			case MARKER_H5:
+			case MARKER_H6:
+			case MANUAL_LABEL:
+				break;
+
+			case MARKER_SETEXT_1:
+			case MARKER_SETEXT_2:
+				if (walker->prev) {
+					switch (walker->prev->type) {
+						case TEXT_NL:
+						case TEXT_NL_SP:
+						case TEXT_LINEBREAK:
+						case TEXT_LINEBREAK_SP:
+							walker->prev->type = NON_INDENT_SPACE;
+							break;
+					}
+				}
+
+				break;
+
+			default:
+				done = true;
+				break;
+		}
+
+		walker = walker->prev;
+	}
+}
+
+
 asset * asset_new(char * url, scratch_pad * scratch) {
 	asset * a = malloc(sizeof(asset));
 
@@ -2627,9 +2788,9 @@ void asset_free(asset * a) {
 	if (a) {
 		free(a->url);
 		free(a->asset_path);
-	}
 
-	free(a);
+		free(a);
+	}
 }
 
 
@@ -2666,6 +2827,7 @@ bool raw_filter_text_matches(char * pattern, short format) {
 	} else {
 		switch (format) {
 			case FORMAT_HTML:
+			case FORMAT_HTML_WITH_ASSETS:
 				if (strstr(pattern, "html")) {
 					return true;
 				}

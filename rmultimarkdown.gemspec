@@ -27,8 +27,6 @@ Gem::Specification.new do |s|
   s.description = s.summary
   s.extra_rdoc_files = ['README.md', 'LICENSE']
 
-  s.add_dependency "bundler"
-
   s.files = %w(LICENSE README.md Rakefile rmultimarkdown.gemspec ext/Makefile) + Dir.glob("{bin,lib,test}/**/*") + Dir.glob("{ext}/**/*.{c,h,rb}")
   s.test_files = Dir.glob("{test}/**/*")
   s.executables = "rmultimarkdown"

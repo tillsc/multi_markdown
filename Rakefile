@@ -2,6 +2,7 @@ require 'rake/clean'
 require 'rdoc/task'
 require 'bundler'
 require 'fileutils'
+require 'rake/testtask'
 
 Bundler::GemHelper.install_tasks
 
@@ -26,23 +27,16 @@ namespace "MultiMarkdown-6" do
       sh 'make' # creates build/version.h
 
       # Copy all c and h files to MMD_DIR which will be released in the gem
-      ['Sources/libMultiMarkdown', 'build'].each do |dir|
+      ['src', 'build'].each do |dir|
         chdir(dir) do
           Dir.glob('{.,include}/*.{h,c}').each do |s|
-            next if s =~ /template/
+            next if s =~ /template|char_lookup/
             dest = "#{MMD_DIR}/#{File.dirname(s)}"
             FileUtils.mkdir_p(dest)
             FileUtils.cp(s, dest)
           end
         end
       end
-
-      # We have to disable the ObjectPool. see include/token.h
-      token_h_file = "#{MMD_DIR}/include/token.h"
-      IO.write(token_h_file, (File.open(token_h_file) { |f|
-        f.read.gsub(/#define kUseObjectPool/, "#define kUseObjectPoolDisabled")
-      }))
-
     end
   end
 
@@ -78,10 +72,10 @@ task :test => [ 'test:unit', 'test:conformance' ]
 namespace :test do
 
   desc 'Run unit tests'
-  task :unit => :build do |t|
-    FileList['test/*_test.rb'].each do |f|
-      ruby f
-    end
+  Rake::TestTask.new(:unit => :build) do |t|
+    t.libs << 'lib'
+    t.libs << 'test'
+    t.test_files = FileList['test/**/*_test.rb']
   end
 
   desc "Run conformance tests"

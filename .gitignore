@@ -2,6 +2,7 @@ ext/Makefile
 ext/*.o
 ext/mmd/*.o
 ext/*.bundle
+ext/*.bundle.*
 ext/*.so
 ext/*.dll
 lib/*.bundle
@@ -10,5 +11,4 @@ lib/*.dll
 pkg
 .ftags
 mkmf.log
-nbproject
-
+/.idea
