@@ -100,29 +100,25 @@ static VALUE rb_multimarkdown_start_engine(VALUE self, VALUE text) {
 
 static VALUE rb_multimarkdown_set_language(VALUE self, VALUE language) {
   short lang = ENGLISH;
-  VALUE language_s = rb_funcall(language, rb_intern("to_s"), 0);
 
-  if (rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("de")) == Qtrue || rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("german")) == Qtrue) {
+  VALUE language_s = rb_obj_as_string(language);
+  const char *s = StringValueCStr(language_s);
+
+  if (strcmp(s, "de") == 0 || strcmp(s, "german") == 0) {
     lang = GERMANGUILL;
-  }
-  else if (rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("ch")) == Qtrue || rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("de-ch")) == Qtrue || rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("swiss")) == Qtrue) {
+  } else if (strcmp(s, "ch") == 0 || strcmp(s, "de-ch") == 0 || strcmp(s, "swiss") == 0) {
     lang = GERMAN;
-  }
-  else if (rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("nl")) == Qtrue || rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("dutch")) == Qtrue) {
+  } else if (strcmp(s, "nl") == 0 || strcmp(s, "dutch") == 0) {
     lang = DUTCH;
-  }
-  else if (rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("fr")) == Qtrue || rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("french")) == Qtrue) {
+  } else if (strcmp(s, "fr") == 0 || strcmp(s, "french") == 0) {
     lang = FRENCH;
-  }
-  else if (rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("sp")) == Qtrue || rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("spanish")) == Qtrue) {
+  } else if (strcmp(s, "sp") == 0 || strcmp(s, "spanish") == 0) {
     lang = SPANISH;
-  }
-  else if (rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("sv")) == Qtrue || rb_funcall(language_s, rb_intern("=="), 1, rb_str_new2("swedish")) == Qtrue) {
+  } else if (strcmp(s, "sv") == 0 || strcmp(s, "swedish") == 0) {
     lang = SWEDISH;
   }
 
   mmd_engine_set_language(get_mmd_engine(self), lang);
-
   return language;
 }
 
