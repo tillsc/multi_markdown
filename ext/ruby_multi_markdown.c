@@ -214,7 +214,7 @@ void Init_multi_markdown() {
    * The version of the MultiMarkdown-6 library
    */
   char *version = mmd_version();
-  rb_define_const(rb_cMultiMarkdown, "MMD_VERSION", rb_str_new2(version));
+  rb_define_const(rb_cMultiMarkdown, "MMD_VERSION", rb_str_new_cstr(version));
   free(version);
 
 }
