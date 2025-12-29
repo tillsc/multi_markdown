@@ -44,38 +44,54 @@ typedef struct engine_manager {
   mmd_engine *mmd_engine;
 } engine_manager;
 
-mmd_engine *get_mmd_engine(VALUE self) {
-  engine_manager *manager;
-  Data_Get_Struct(self, engine_manager, manager);
-
-  return manager->mmd_engine;
-}
-
-static void free_engine_manager(engine_manager* manager) {
+static void engine_manager_free(void *ptr) {
+  engine_manager *manager = (engine_manager *)ptr;
   if (manager->mmd_engine) {
     mmd_engine_free(manager->mmd_engine, true);
+    manager->mmd_engine = NULL;
   }
-  free(manager);
+  xfree(manager);
 }
 
-static VALUE rb_multimarkdown_allocate(VALUE klass) {
-  engine_manager *manager = malloc(sizeof(engine_manager));
-  manager->mmd_engine = NULL;
+static size_t engine_manager_memsize(const void *ptr) {
+  return sizeof(engine_manager);
+}
 
-  return Data_Wrap_Struct(klass, NULL, free_engine_manager, manager);
+static const rb_data_type_t engine_manager_type = {
+  "MultiMarkdown/engine_manager",
+  { 0, engine_manager_free, engine_manager_memsize, },
+  0, 0,
+  RUBY_TYPED_FREE_IMMEDIATELY
+};
+
+static VALUE rb_multimarkdown_allocate(VALUE klass) {
+  engine_manager *manager;
+  VALUE obj = TypedData_Make_Struct(klass, engine_manager, &engine_manager_type, manager);
+  manager->mmd_engine = NULL;
+  return obj;
+}
+
+static engine_manager *get_manager(VALUE self) {
+  engine_manager *manager;
+  TypedData_Get_Struct(self, engine_manager, &engine_manager_type, manager);
+  return manager;
+}
+
+static mmd_engine *get_mmd_engine(VALUE self) {
+  return get_manager(self)->mmd_engine;
 }
 
 static VALUE rb_multimarkdown_start_engine(VALUE self, VALUE text) {
   Check_Type(text, T_STRING);
 
-  engine_manager *manager;
-  Data_Get_Struct(self, engine_manager, manager);
+  engine_manager *manager = get_manager(self);
 
   if (manager->mmd_engine) {
     mmd_engine_free(manager->mmd_engine, true);
+    manager->mmd_engine = NULL;
   }
 
-  manager->mmd_engine = mmd_engine_create_with_string(StringValuePtr(text), get_exts(self));
+  manager->mmd_engine = mmd_engine_create_with_string(StringValueCStr(text), get_exts(self));
 
   return self;
 }
