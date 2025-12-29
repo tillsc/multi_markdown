@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rmultimarkdown (6.7.0.0)
+    rmultimarkdown (6.7.0.2)
 
 GEM
   remote: https://rubygems.org/
