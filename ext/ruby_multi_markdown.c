@@ -127,21 +127,36 @@ static VALUE rb_multimarkdown_to_latex(VALUE self) {
 }
 
 static VALUE rb_multimarkdown_extract_metadata_keys(VALUE self) {
-  char *metadata_keys = mmd_engine_metadata_keys(get_mmd_engine(self));
+  mmd_engine *engine = get_mmd_engine(self);
+  size_t end = 0;
+
+  if (!mmd_engine_has_metadata(engine, &end)) {
+    return rb_ary_new();
+  }
+
+  char *metadata_keys = mmd_engine_metadata_keys(engine);
   VALUE str = rb_utf8_str_new_cstr(metadata_keys);
   free(metadata_keys);
 
-  return rb_funcall(str, rb_intern("split"), 1, rb_str_new2("\n"));
+  return rb_funcall(str, rb_intern("split"), 1, rb_str_new_cstr("\n"));
 }
 
 static VALUE rb_multimarkdown_extract_metadata_value(VALUE self, VALUE key) {
   Check_Type(key, T_STRING);
-  char *pkey = StringValuePtr(key);
 
-  char *metadata = mmd_engine_metavalue_for_key(get_mmd_engine(self), pkey);
-  VALUE result = rb_utf8_str_new_cstr(metadata);
+  mmd_engine *engine = get_mmd_engine(self);
+  size_t end = 0;
 
-  return result;
+  if (!mmd_engine_has_metadata(engine, &end)) {
+    return Qnil;
+  }
+
+  char *metadata = mmd_engine_metavalue_for_key(engine, StringValueCStr(key));
+  if (metadata == NULL) {
+    return Qnil;
+  }
+
+  return rb_utf8_str_new_cstr(metadata);
 }
 
 //*** Define Class

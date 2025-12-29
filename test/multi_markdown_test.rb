@@ -87,4 +87,17 @@ eof
       assert_equal("M€tädätä", multimarkdown.metadata('umlauts'))
   end
 
+  def test_empty_metadata
+    m = MultiMarkdown.new "# Markdown without metadata"
+    assert_equal({}, m.metadata)
+
+    m2 = MultiMarkdown.new "foo: bar\n\n# Markdown with some metadata"
+    assert_equal("bar", m2.extract_metadata_value("foo"))
+    assert_equal(nil, m2.extract_metadata_value("doesnt_exist"))
+
+    m3 = MultiMarkdown.new "foo: bar\n\n# More Markdown", :no_metadata
+    assert_equal(nil, m3.extract_metadata_value("foo"))
+    assert_equal(nil, m3.extract_metadata_value("doesnt_exist"))
+  end
+
 end
