@@ -11,8 +11,13 @@ else
   $CXXFLAGS="#{$CXXFLAGS} -std=c99"
 end
 
-$CFLAGS  << '  -DNDEBUG=1 -DDISABLE_OBJECT_POOL'
-$CXXFLAGS << '  -DNDEBUG=1 -DDISABLE_OBJECT_POOL'
+$CFLAGS  << ' -DNDEBUG=1 -DDISABLE_OBJECT_POOL'
+$CXXFLAGS << ' -DNDEBUG=1 -DDISABLE_OBJECT_POOL'
+
+if RbConfig::CONFIG['host_os'] =~ /linux/
+  $CFLAGS  << ' -D_XOPEN_SOURCE=500'
+  $CXXFLAGS  << ' -D_XOPEN_SOURCE=500'
+end
 
 HEADER_DIRS = [
   File.expand_path('../mmd', __FILE__),
